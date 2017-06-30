@@ -19,6 +19,8 @@ repository:
   # Either `true` to enable the wiki for this repository, `false` to disable it.
   has_wiki: false
 
+  has_projects: false
+
   # Either `true` to enable downloads for this repository, `false` to disable them.
   has_downloads: false
 
