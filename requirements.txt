@@ -1,0 +1,3 @@
+requests
+-e git://github.com/tokland/youtube-upload.git@master#egg=youtube-upload
+zoomus
