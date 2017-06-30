@@ -1,5 +1,12 @@
 # EDGI Scripts
 
+This is an experimental repository for scripts that make up part of EDGI
+digital infrastructure.
+
+At some point in the future, these will likely be run regularly and
+on-demand as part of [a visual script-runner
+tool](https://github.com/edgi-govdata-archiving/overview/issues/149).
+
 ## Zoom-YouTube Uploader
 
 Requirements:
