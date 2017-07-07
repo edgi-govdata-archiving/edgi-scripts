@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+from datetime import datetime
 import json
 import os
 import requests
+from subprocess import check_output
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
@@ -17,6 +19,16 @@ client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
 # Assumes first id is main account
 user_id = json.loads(client.user.list().text)['users'][0]['id']
 
+def fix_date(date_string):
+    date = date_string
+    index = date.find('Z')
+    date = date[:index] + '.0' + date[index:]
+
+    return date
+
+def pretty_date(date_string):
+    return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ').strftime('%b %-d, %Y')
+
 def download_file(url, download_path):
     r = requests.get(url, stream=True)
     resolved_url = r.url
@@ -30,12 +42,15 @@ def download_file(url, download_path):
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
 
+    return filepath
+
 DO_FILTER = False
 
 with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
     for meeting in json.loads(client.recording.list(host_id=user_id).text)['meetings']:
         print('Processing recording: ' + meeting['topic'] + ' from ' + meeting['start_time'])
+        # 3. filter by criteria (no-op for now)
         if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
             print('Skipping...')
             continue
@@ -45,12 +60,15 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             if file['file_type'].lower() == 'mp4':
                 url = file['download_url']
                 print('Download from ' + url + ' ...')
-                download_file(url, tmpdirname)
-
-# 1. get zoom user id for host id
-# 2. get zoom meetings
-# 3. filter by criteria
-# 4. get recordings for filtered meetings
-# 6. get youtube video listing from youtube
-# 7. ensure no video exists with same properties (length)
-# 8. if not, upload to youtube as unlisted
+                filepath = download_file(url, tmpdirname)
+                title = meeting['topic'] + ' - ' + pretty_date(meeting['start_time'])
+                command = [
+                        "youtube-upload", filepath,
+                        "--title='{}'".format(title),
+                        "--recording-date={}".format(fix_date(meeting['start_time'])),
+                        "--privacy=unlisted",
+                        "--client-secrets=client_secret.json",
+                        "--credentials-file=.youtube-upload-credentials.json"
+                        ]
+                out = check_output(command)
+                print(out)
