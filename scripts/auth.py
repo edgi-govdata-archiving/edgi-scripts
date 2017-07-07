@@ -9,7 +9,7 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 # If modifying these scopes, delete your previously saved credentials
-SCOPES = 'https://www.googleapis.com/auth/youtube.upload'
+SCOPES = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube']
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'youtube-upload'
 CREDS_FILENAME = '.youtube-upload-credentials.json'
