@@ -1,3 +1,5 @@
 .env
+client_secret.json
+.youtube-upload-credentials.json
 *.json
 *.mp4
