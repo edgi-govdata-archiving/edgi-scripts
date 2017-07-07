@@ -64,8 +64,8 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                 title = meeting['topic'] + ' - ' + pretty_date(meeting['start_time'])
                 command = [
                         "youtube-upload", filepath,
-                        "--title='{}'".format(title),
-                        "--recording-date={}".format(fix_date(meeting['start_time'])),
+                        "--title=" + title,
+                        "--recording-date=" + fix_date(meeting['start_time']),
                         "--privacy=unlisted",
                         "--client-secrets=client_secret.json",
                         "--credentials-file=.youtube-upload-credentials.json"
