@@ -9,12 +9,21 @@ tool](https://github.com/edgi-govdata-archiving/overview/issues/149).
 
 ## Zoom-YouTube Uploader
 
-Requirements:
+**Setup**
 
-* `virtualenvwrapper.sh`
+Quick reference for Ubuntu (may vary).
 
 ```
+apt-get install python python-pip
+pip install virtualenvwrapper
+echo 'source /usr/local/bin/virtualenvwrapper.sh' >> ~/.bashrc
+exec $SHELL
 mkvirtualenv edgi-scripts --python=`which python3`
+```
+
+**Usage**
+
+```
 workon edgi-scripts
 pip install -r requirements.txt
 
