@@ -57,18 +57,21 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
         print('Recording is permitted for upload!')
         for file in meeting['recording_files']:
-            if file['file_type'].lower() == 'mp4':
-                url = file['download_url']
-                print('Download from ' + url + ' ...')
-                filepath = download_file(url, tmpdirname)
-                title = meeting['topic'] + ' - ' + pretty_date(meeting['start_time'])
-                command = [
-                        "youtube-upload", filepath,
-                        "--title=" + title,
-                        "--recording-date=" + fix_date(meeting['start_time']),
-                        "--privacy=unlisted",
-                        "--client-secrets=client_secret.json",
-                        "--credentials-file=.youtube-upload-credentials.json"
-                        ]
-                out = check_output(command)
-                print(out)
+            if file['file_size'] == 0:
+                print('File still processing...')
+            else:
+                if file['file_type'].lower() == 'mp4':
+                    url = file['download_url']
+                    print('Download from ' + url + ' ...')
+                    filepath = download_file(url, tmpdirname)
+                    title = meeting['topic'] + ' - ' + pretty_date(meeting['start_time'])
+                    command = [
+                            "youtube-upload", filepath,
+                            "--title=" + title,
+                            "--recording-date=" + fix_date(meeting['start_time']),
+                            "--privacy=unlisted",
+                            "--client-secrets=client_secret.json",
+                            "--credentials-file=.youtube-upload-credentials.json"
+                            ]
+                    out = check_output(command)
+                    print(out)
