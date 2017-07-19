@@ -39,7 +39,7 @@ pip install -r requirements.txt
 # Copy client_secret.json to repo root dir. This is downloaded from
 # Google API Console, and will need to be renamed.
 
-# Authorize YouTube app with [EDGI] account
+# Authorize YouTube app with EDGI account
 # This will need to be done from a system with a windowed browser (ie.
 # not a server). If running the script on a server is required, you will
 # need to transfer the `.youtube-upload-credentials.json` file from your
