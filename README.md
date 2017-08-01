@@ -55,6 +55,12 @@ export EDGI_ZOOM_API_SECRET=xxxxxxxx
 python scripts/upload_zoom_recordings.py
 ```
 
+# Contributing Guidelines
+
+We love improvements to our tools! EDGI has general [guidelines for
+contributing](https://github.com/edgi-govdata-archiving/overview/blob/master/CONTRIBUTING.md)
+to all of our organizational repos.
+
 ## License & Copyright
 
 Copyright (C) 2017 Environmental Data and Governance Initiative (EDGI)
