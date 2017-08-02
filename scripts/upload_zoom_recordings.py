@@ -14,6 +14,7 @@ ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
 
 MEETINGS_TO_RECORD = ['EDGI Community Standup']
 DEFAULT_YOUTUBE_PLAYLIST = 'Uploads from Zoom'
+DEFAULT_YOUTUBE_CATEGORY = 'Science & Technology'
 
 client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
 
@@ -70,6 +71,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "youtube-upload", filepath,
                             "--title=" + title,
                             "--playlist=" + DEFAULT_YOUTUBE_PLAYLIST,
+                            "--category=" + DEFAULT_YOUTUBE_CATEGORY,
                             "--recording-date=" + fix_date(meeting['start_time']),
                             "--privacy=unlisted",
                             "--client-secrets=client_secret.json",
