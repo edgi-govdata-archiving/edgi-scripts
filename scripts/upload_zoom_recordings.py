@@ -12,6 +12,9 @@ from zoomus import ZoomClient
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
 
+def is_truthy(x): return x.lower() in ['true', '1', 'y', 'yes']
+ZOOM_DELETE_AFTER_UPLOAD = is_truthy(os.environ.get('EDGI_ZOOM_DELETE_AFTER_UPLOAD', ''))
+
 MEETINGS_TO_RECORD = ['EDGI Community Standup']
 DEFAULT_YOUTUBE_PLAYLIST = 'Uploads from Zoom'
 
@@ -76,4 +79,9 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
                     out = check_output(command)
+                    if ZOOM_DELETE_AFTER_UPLOAD:
+                        # Just delete the video for now, since that takes the most storage space.
+                        # We should save the chat log transcript in a comment on the video.
+                        client.recording.delete(meeting_id=file['meeting_id'])
+                        print("Deleted cloud recording from Zoom.")
                     print(out)
