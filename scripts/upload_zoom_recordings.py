@@ -83,6 +83,6 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     if ZOOM_DELETE_AFTER_UPLOAD:
                         # Just delete the video for now, since that takes the most storage space.
                         # We should save the chat log transcript in a comment on the video.
-                        client.recording.delete(meeting_id=file['meeting_id'])
-                        print("Deleted cloud recording from Zoom.")
+                        client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
+                        print("Deleted {} file from Zoom for recording: {}".format(meeting['topic'], file['file_type']))
                     print(out)
