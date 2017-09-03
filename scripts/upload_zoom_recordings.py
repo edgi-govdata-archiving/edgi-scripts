@@ -62,7 +62,8 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         print('Recording is permitted for upload!')
         for file in meeting['recording_files']:
             if file['file_size'] == 0:
-                print('File still processing...')
+                print('Meeting still processing: {}'.format(meeting['topic']))
+                break
             else:
                 if file['file_type'].lower() == 'mp4':
                     url = file['download_url']
