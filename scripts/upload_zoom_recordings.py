@@ -8,9 +8,13 @@ from subprocess import check_output
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
+import slackweb
 
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
+SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', False)
+if SLACK_WEBHOOK_URL:
+    slack = slackweb.Slack(url=SLACK_WEBHOOK_URL)
 
 def is_truthy(x): return x.lower() in ['true', '1', 'y', 'yes']
 ZOOM_DELETE_AFTER_UPLOAD = is_truthy(os.environ.get('EDGI_ZOOM_DELETE_AFTER_UPLOAD', ''))
@@ -61,6 +65,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
         print('Recording is permitted for upload!')
         for file in meeting['recording_files']:
+            uploaded_files = 0
             if file['file_size'] == 0:
                 print('Meeting still processing: {}'.format(meeting['topic']))
                 break
@@ -80,9 +85,18 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
                     out = check_output(command)
+                    uploaded_files += 1
                     if ZOOM_DELETE_AFTER_UPLOAD:
                         # Just delete the video for now, since that takes the most storage space.
                         # We should save the chat log transcript in a comment on the video.
                         client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
                         print("Deleted {} file from Zoom for recording: {}".format(meeting['topic'], file['file_type']))
                     print(out)
+        if uploaded_files and SLACK_WEBHOOK_URL:
+            attachment = {
+                    'pretext': 'New meeting video(s) have been uploaded!',
+                    'title': 'YouTube: EDGI Zoom Meetings playlist',
+                    'title_link': 'https://www.youtube.com/playlist?list=PLtsP3g9LafVv78TIa42xr591-4CfKMYQO',
+                    'text': 'A playlist archiving all recorded EDGI meetings from Zoom, our video conferencing platform.',
+                    }
+            slack.notify(attachments=[attachment], channel="#meeting_announcements", username="halpy", icon_emoji=":space_invader:")

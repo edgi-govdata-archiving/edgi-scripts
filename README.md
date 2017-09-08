@@ -14,6 +14,8 @@ This script cycles through Zoom cloud recordings and for each:
 * uploads video to youtube as unlisted video
 * adds it to a default playlist (which happens to be unlisted)
 * sets video title to be `<title> - Mmm DD, YYYY` of recorded date
+* Notifies Slack channel `#meeting_announcements` that a video was
+  uploaded, and provides link.
 * **deletes** original video file from Zoom (**not** audio or chat log)
 * stupidly allows duplicates, but YouTube will recognize and disable
   them after upload
