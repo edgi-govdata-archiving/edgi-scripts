@@ -52,7 +52,10 @@ DO_FILTER = False
 
 with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
-    for meeting in json.loads(client.recording.list(host_id=user_id).text)['meetings']:
+    meetings = client.recording.list(host_id=user_id).json()['meetings']
+    meetings = sorted(meetings, lambda m: m['start_time'])
+    meetings = filter(lambda m: m['duration'] > 1, meetings)
+    for meeting in meetings:
         print('Processing recording: ' + meeting['topic'] + ' from ' + meeting['start_time'])
         # 3. filter by criteria (no-op for now)
         if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
