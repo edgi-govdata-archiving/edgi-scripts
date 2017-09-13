@@ -65,6 +65,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             uploaded_files = 0
             if file['file_size'] == 0:
                 print('Meeting still processing: {}'.format(meeting['topic']))
+                requests.post(NOTIFICATION_WEBHOOK_URL, {'status':'processing'})
                 break
             else:
                 if file['file_type'].lower() == 'mp4':
@@ -90,4 +91,4 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                         print("Deleted {} file from Zoom for recording: {}".format(meeting['topic'], file['file_type']))
                     print(out)
         if uploaded_files and NOTIFICATION_WEBHOOK_URL:
-            r = requests.post(NOTIFICATION_WEBHOOK_URL)
+            requests.post(NOTIFICATION_WEBHOOK_URL, {'status': 'uploaded'})
