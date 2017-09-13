@@ -14,8 +14,9 @@ This script cycles through Zoom cloud recordings and for each:
 * uploads video to youtube as unlisted video
 * adds it to a default playlist (which happens to be unlisted)
 * sets video title to be `<title> - Mmm DD, YYYY` of recorded date
-* Notifies Slack channel `#meeting_announcements` that a video was
-  uploaded, and provides link.
+* POSTs to a webhook url if files are uploaded. For example, we notify
+  `#meeting_announcements` via our Hubot (See
+[here](https://github.com/edgi-govdata-archiving/edgi-hubot/blob/master/scripts/youtube-upload.coffee))V
 * **deletes** original video file from Zoom (**not** audio or chat log)
 * stupidly allows duplicates, but YouTube will recognize and disable
   them after upload
