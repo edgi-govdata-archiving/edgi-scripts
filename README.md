@@ -7,7 +7,7 @@ At some point in the future, these will likely be run regularly and
 on-demand as part of [a visual script-runner
 tool](https://github.com/edgi-govdata-archiving/overview/issues/149).
 
-## `archive.sh`
+## Backup to Internet Archive: `archive.sh`
 
 This script is used to run periodically and ensure that recent copies of
 the EDGI website are backed up to the Internet Archive.
@@ -18,7 +18,7 @@ the EDGI website are backed up to the Internet Archive.
 bash scripts/archive.sh envirodatagov.org
 ```
 
-## Zoom-YouTube Uploader
+## Zoom-YouTube Uploader: `upload_zoom_recordings.py` and `auth.py`
 
 This script cycles through Zoom cloud recordings and for each:
 
