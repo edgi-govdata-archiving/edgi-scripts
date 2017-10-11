@@ -12,7 +12,7 @@ tool](https://github.com/edgi-govdata-archiving/overview/issues/149).
 This script is used to run periodically and ensure that recent copies of
 the EDGI website are backed up to the Internet Archive.
 
-### Usage
+**Usage**
 
 ```
 bash scripts/archive.sh envirodatagov.org
