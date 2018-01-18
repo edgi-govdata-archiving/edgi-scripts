@@ -8,6 +8,7 @@ from subprocess import check_output
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
+from constants import USER_TYPES
 
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
@@ -20,8 +21,9 @@ DEFAULT_YOUTUBE_PLAYLIST = 'Uploads from Zoom'
 
 client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
 
-# Assumes first id is main account
-user_id = json.loads(client.user.list().text)['users'][0]['id']
+# Get main account, which should be 'pro'
+pro_users = [user for user in client.user.list().json()['users'] if user['type'] >= USER_TYPES['pro'] ]
+user_id = pro_users[0]['id']
 
 def fix_date(date_string):
     date = date_string
