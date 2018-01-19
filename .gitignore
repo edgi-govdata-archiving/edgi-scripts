@@ -3,3 +3,4 @@ client_secret.json
 .youtube-upload-credentials.json
 *.json
 *.mp4
+__pycache__/
