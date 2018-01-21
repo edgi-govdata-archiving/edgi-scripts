@@ -125,6 +125,6 @@ See the [`LICENSE`](/LICENSE) file for details.
 [travis-cron]: https://blog.travis-ci.com/2016-12-06-the-crons-are-here
 [travis-enc]: https://docs.travis-ci.com/user/encryption-keys/
 [travis-encfile]: https://docs.travis-ci.com/user/encrypting-files/#Manual-Encryption
-[travis-config1]: https://github.com/patcon/edgi-scripts/blob/travis-cron/.travis.yml#L8-L11
-[travis-config2]: https://github.com/patcon/edgi-scripts/blob/travis-cron/.travis.yml#L14-L15
-[travis-proj]: https://travis-ci.org/patcon/edgi-scripts
+[travis-config1]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/travis-cron/.travis.yml#L8-L11
+[travis-config2]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/travis-cron/.travis.yml#L14-L15
+[travis-proj]: https://travis-ci.org/edgi-govdata-archiving/edgi-scripts
