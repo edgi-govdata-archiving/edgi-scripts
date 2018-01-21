@@ -9,8 +9,8 @@ env:
     - secure: "Qb7s96xQw1S3n6uwCz4+TkkumiNtYJ4N3JRlNXvU+r+97bB6dDVeffuCxvrlAlpfCCkNeZsPTG63xwV97QM5nlOEHYeKlPC5VP2jeLvOgrKO91RkMrdP3o7PcZ3m2toowWuDamvzUxaFn6eq8foMyY/qBIBrSeX5Ve7n3jGVp6SORb4/KUU8+zG2fRd+zEQyE+qdLllgigC2pGEGUZHJ5jMPfYG4VM1H6/pAPwXQ78fyGLXt3k+VYAY5Z/Pg59Byqkdg8sP3Rd3AjpLza0X7Ut/xmiNhKoP4KKEf4uCl1UTtyAmLIy8Pbbf9EQP3+UKoliCMNYCXdp2BvO5Ayy5Bdkiebr+aObG6qRrk0k2tKSi/x793wTzYLG3Obo2XRsuSq0NruQLq+iBoDPabCCsC00lro8dYzIFMfbpNf+71wzQ4Gv+OOj+RGH+aimwSjyDCSLDVo0zjkuESaCmJ95GkvJBs7KmFxR+I8fOMx0DAcYzcXv0J4gkUytmAIqMG+YKHBIxUc1Gx263HahNm+ZftSSxcPIXdHT7IHN3Lv47iSdIpxDjHoFeXx99RZ18HgUvdSDnbY1G81DqAlYQFunqDOCs3Bipj76G8Y8b0kI4E2fp88NDwQegXe3KKiJSV5SKPtQ3p5QA0sCfSKN1NiTMdYcXdmDqqhkSH/Za11vRTrBM="
 
 before_install:
-  - openssl aes-256-cbc -K $encrypted_68e4347e5e02_key -iv $encrypted_68e4347e5e02_iv -in client_secret.json.enc -out client_secret.json -d
-  - openssl aes-256-cbc -K $encrypted_68e4347e5e02_key -iv $encrypted_68e4347e5e02_iv -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d
+  - openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d
+  - openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d
 
 script:
   - python scripts/upload_zoom_recordings.py
