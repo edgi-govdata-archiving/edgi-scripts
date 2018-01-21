@@ -43,6 +43,10 @@ uploaded more than once, but YouTube will recognize and disable them
 after upload
 
 **Usage via TravisCI**
+
+[![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)](https://travis-ci.org/edgi-govdata-archiving/edgi-scripts)
+[![TravisCI Status](https://img.shields.io/travis/edgi-govdata-archiving/edgi-scripts.svg?label=TravisCI)](https://travis-ci.org/edgi-govdata-archiving/edgi-scripts)
+
 There is actually no need to run this script locally, as we have it
 running daily on TravisCI (service explained above).
 
