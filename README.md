@@ -29,7 +29,7 @@ the EDGI website are backed up to the Internet Archive.
 bash scripts/archive.sh envirodatagov.org
 ```
 
-## Zoom-to-YouTube Uploader: `upload_zoom_recordings.py` and `auth.py`
+### Zoom-to-YouTube Uploader: `upload_zoom_recordings.py` and `auth.py`
 
 This script cycles through Zoom cloud recordings and for each:
 
@@ -42,7 +42,7 @@ Note: the script isn't smart enough to detect duplicate videos being
 uploaded more than once, but YouTube will recognize and disable them
 after upload
 
-**Usage via TravisCI**
+#### Usage via TravisCI
 
 [![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)](https://travis-ci.org/edgi-govdata-archiving/edgi-scripts)
 [![TravisCI Status](https://img.shields.io/travis/edgi-govdata-archiving/edgi-scripts.svg?label=TravisCI)](https://travis-ci.org/edgi-govdata-archiving/edgi-scripts)
