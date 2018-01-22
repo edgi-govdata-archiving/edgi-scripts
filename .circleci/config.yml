@@ -1,0 +1,57 @@
+version: 2
+
+machine:
+  environment:
+    EDGI_ZOOM_DELETE_AFTER_UPLOAD: 1
+
+jobs:
+  youtube-upload:
+    docker:
+      - image: circleci/python:3.6.2
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      - run:
+        name: decrypt files
+        command: |
+          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d
+          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d
+
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: run script
+          command: |
+            . venv/bin/activate
+            python3 scripts/upload_zoom_recordings.py
+
+workflows:
+  version: 2
+  hourly:
+    jobs:
+      - youtube-upload
+    triggers:
+      - schedule:
+        cron: "0 * * * *"
+        filters:
+          branches:
+            only:
+              - master
