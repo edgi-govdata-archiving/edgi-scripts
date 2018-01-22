@@ -43,14 +43,14 @@ jobs:
             python3 scripts/upload_zoom_recordings.py
 
 workflows:
-  version: 2
-  hourly:
-    jobs:
-      - build
-    triggers:
-      - schedule:
-        cron: "0 * * * *"
-        filters:
-          branches:
-            only:
-              - master
+   version: 2
+   nightly:
+     triggers:
+       - schedule:
+           cron: "0 0 * * *"
+           filters:
+             branches:
+               only:
+                 - master
+     jobs:
+       - build
