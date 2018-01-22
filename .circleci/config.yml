@@ -46,7 +46,7 @@ workflows:
   version: 2
   hourly:
     jobs:
-      - youtube-upload
+      - build
     triggers:
       - schedule:
         cron: "0 * * * *"
