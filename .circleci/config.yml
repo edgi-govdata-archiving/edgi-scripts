@@ -1,13 +1,11 @@
 version: 2
 
-machine:
-  environment:
-    EDGI_ZOOM_DELETE_AFTER_UPLOAD: 1
-
 jobs:
   build:
     docker:
       - image: circleci/python:3.6.2
+    environment:
+      - EDGI_ZOOM_DELETE_AFTER_UPLOAD: '1'
     steps:
       - checkout
 
@@ -45,12 +43,8 @@ jobs:
 workflows:
    version: 2
    nightly:
+     jobs:
+       - build
      triggers:
        - schedule:
            cron: "0 0 * * *"
-           filters:
-             branches:
-               only:
-                 - master
-     jobs:
-       - build
