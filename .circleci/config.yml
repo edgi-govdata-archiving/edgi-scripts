@@ -5,18 +5,17 @@ machine:
     EDGI_ZOOM_DELETE_AFTER_UPLOAD: 1
 
 jobs:
-  youtube-upload:
+  build:
     docker:
       - image: circleci/python:3.6.2
-    working_directory: ~/repo
     steps:
       - checkout
 
       - run:
-        name: decrypt files
-        command: |
-          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d
-          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d
+          name: decrypt files
+          command: |
+            openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d
+            openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d
 
 
       - restore_cache:
