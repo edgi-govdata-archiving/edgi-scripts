@@ -45,7 +45,7 @@ after upload
 #### Usage via CircleCI
 
 [![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
-[![CircleCI Status](https://img.shields.io/circleci/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
+[![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
 
 There is actually no need to run this script locally, as we have it
 running daily on CircleCI (service explained above).
