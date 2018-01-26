@@ -1,4 +1,29 @@
 #!/usr/bin/env python
+#
+# Description:
+#
+#      This script will download cloud recordings from Zoom Meetings, and
+#      upload them to YouTube.
+#
+# Usage:
+#
+#      python scripts/upload_zoom_recordings.py
+#
+# Environment Variables:
+#
+#     EDGI_ZOOM_API_KEY - See https://developer.zoom.us/me/ (required)
+#     EDGI_ZOOM_API_SECRET - See https://developer.zoom.us/me/ (required)
+#     EDGI_ZOOM_DELETE_AFTER_UPLOAD - If set to 'true', cloud recording will be
+#         deleted after upload to YouTube.
+#
+# Configuration:
+#
+#     This script expects two files to be available to enable YouTube upload:
+#
+#     * `client_secret.json`
+#     * `.youtube-upload-credentials.json`
+#
+#     See README for how to generate these files.
 
 from datetime import datetime
 import json

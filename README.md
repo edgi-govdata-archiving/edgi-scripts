@@ -90,12 +90,14 @@ pip install -r requirements.txt
 
 # Copy client_secret.json to repo root dir. This is downloaded from
 # Google API Console, and will need to be renamed.
+# See: https://github.com/tokland/youtube-upload#authentication
 
-# Authorize YouTube app with EDGI account
+# Authorize YouTube app with EDGI account.
 # This will need to be done from a system with a windowed browser (ie.
-# not a server). If running the script on a server is required, you will
-# need to transfer the `.youtube-upload-credentials.json` file from your
-# workstation onto the server.
+# not a server). It will generate a file named
+# `.youtube-upload-credentials.json` in the repo root dir. If running the
+# script on a server is required, you will # need to transfer this file
+# from your # workstation onto the server.
 python scripts/auth.py
 
 # Prepare to download all videos from Zoom
@@ -103,7 +105,7 @@ python scripts/auth.py
 export EDGI_ZOOM_API_KEY=xxxxxxx
 export EDGI_ZOOM_API_SECRET=xxxxxxxx
 
-# Download and upload files from Zoom
+# Download from Zoom and upload to YouTube
 python scripts/upload_zoom_recordings.py
 ```
 
