@@ -1,3 +1,5 @@
+Do not merge. Test of Circle-CI.
+
 # EDGI Scripts
 
 This is a repository for scripts that are part of EDGI's digital
