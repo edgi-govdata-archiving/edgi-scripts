@@ -40,11 +40,15 @@ jobs:
             . venv/bin/activate
             python3 scripts/upload_zoom_recordings.py
 
-workflows:
-   version: 2
-   nightly:
-     jobs:
-       - build
-     triggers:
-       - schedule:
-           cron: "0 0 * * *"
+workflows:		
+  version: 2		
+  nightly:
+    triggers:		
+      - schedule:		
+          cron: "0 0 * * *"		
+          filters:		
+            branches:		
+              only:
+                - master
+    jobs:
+      - build
