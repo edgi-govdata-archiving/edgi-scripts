@@ -38,6 +38,7 @@ jobs:
           name: run script
           command: |
             . venv/bin/activate
+            echo 'tickle the actual circle file?'
             python3 scripts/upload_zoom_recordings.py
 
 workflows:
