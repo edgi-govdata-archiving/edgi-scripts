@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo 'WHY HELLO THERE I AM THE ZOOMLOADER'
+
 VENV=edgi-scripts
 
 activate () {
