@@ -13,8 +13,8 @@ fashion
 
 ## Technologies Used
 
-* [**CircleCI.**][circleci] A script-running service
-  that [runs scheduled tasks][circleci-cron] for us in the cloud.
+* [**TravisCI.**][travis] A community-maintained script-running service
+  that [runs scheduled tasks][travis-cron] for us in the cloud.
 
 ## Script Catalog
 
@@ -42,33 +42,31 @@ Note: the script isn't smart enough to detect duplicate videos being
 uploaded more than once, but YouTube will recognize and disable them
 after upload
 
-#### Usage via CircleCI
+#### Usage via TravisCI
 
-[![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
-[![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
+[![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)](https://travis-ci.org/edgi-govdata-archiving/edgi-scripts)
+[![TravisCI Status](https://img.shields.io/travis/edgi-govdata-archiving/edgi-scripts.svg?label=TravisCI)](https://travis-ci.org/edgi-govdata-archiving/edgi-scripts)
 
 There is actually no need to run this script locally, as we have it
-running daily on CircleCI (service explained above).
+running daily on TravisCI (service explained above).
 
 * We added our secret environment variables, (`EDGI_ZOOM_API_KEY` and
-  `EDGI_ZOOM_API_SECRET`), to the [CircleCI configuration
-file][circleci-config1] using the [documented method of encrypting
-secrets][circleci-envvars].
+  `EDGI_ZOOM_API_SECRET`), to the [travis configuration
+file][travis-config1] using the [documented method of encrypting
+secrets][travis-enc].
 * Using the [manual encryption method (OpenSSL
-  variant)][circleci-encfile], we encrypted the secret Google-related JSON
+  variant)][travis-encfile], we encrypted the secret Google-related JSON
 files, (`client_secret.json` and `.youtube-upload-credentials.json`). We
 used the above `EDGI_ZOOM_API_SECRET` as the password, since that's a
-secret that CircleCI already knows. We stored the encrypted versions of
-these two JSON files in the repo. We added a line to the [CircleCI
-config][circleci-config2] to decrypt them for use when running in the
+secret that Travis already knows. We stored the encrypted versions of
+these two JSON files in the repo. We added a line to the [travis
+config][travis-config2] to decrypt them for use when running in the
 cloud.
 
 **For automatic runs of the script:** It kicks off daily around 6am ET.
 
-**For manual runs of the script:** Visit [our project page on the
-CircleCI
-platform][circleci-proj], and click the "Rebuild" button on the most
-recent build number.
+**For manual runs of the script:** Visit [our project page on the Travis
+platform][travis-proj], and click the "Restart build" button.
 
 **Setup**
 
@@ -127,10 +125,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the [`LICENSE`](/LICENSE) file for details.
 
 <!-- Links -->
-[circleci]: https://circleci.com/docs/1.0/introduction/
-[circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
-[circleci-envvars]: https://circleci.com/docs/1.0/environment-variables/#setting-environment-variables-for-all-commands-without-adding-them-to-git
-[circleci-encfile]: https://circleci.com/docs/1.0/environment-variables/#keeping-encrypted-environment-variables-in-source-code
-[circleci-config1]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
-[circleci-config2]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
-[circleci-proj]: https://circleci.com/gh/edgi-govdata-archiving/edgi-scripts
+[travis]: https://docs.travis-ci.com/user/for-beginners/
+[travis-cron]: https://blog.travis-ci.com/2016-12-06-the-crons-are-here
+[travis-enc]: https://docs.travis-ci.com/user/encryption-keys/
+[travis-encfile]: https://docs.travis-ci.com/user/encrypting-files/#Manual-Encryption
+[travis-config1]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/travis-cron/.travis.yml#L8-L11
+[travis-config2]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/travis-cron/.travis.yml#L14-L15
+[travis-proj]: https://travis-ci.org/edgi-govdata-archiving/edgi-scripts
