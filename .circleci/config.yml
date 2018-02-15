@@ -1,9 +1,4 @@
-version: 2.0
-
-general:
-  branches:
-    only:
-      - master
+version: 2
 
 jobs:
   build:
@@ -47,6 +42,9 @@ jobs:
 
 workflows:
   version: 2
+  commit:
+    jobs:
+      - build
   nightly:
     jobs:
       - build
