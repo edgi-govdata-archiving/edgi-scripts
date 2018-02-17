@@ -115,13 +115,13 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             ]
                     video_id = check_output(command).strip()
 
-                    youtube_options = {
+                    yt_options = {
                             'client_secrets': 'client_secrets.json',
                             'credentials_file': '.youtube-upload-credentials.json',
                             'auth_browser': None,
                             }
-                    options = SimpleNamespace(**options)
-                    youtube = main.get_youtube_handler(options)
+                    yt_options = SimpleNamespace(**yt_options)
+                    youtube = main.get_youtube_handler(yt_options)
 
                     if 'data together' in meeting['topic'].lower():
                         playlist_name = 'Data Together'
