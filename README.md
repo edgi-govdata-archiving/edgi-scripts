@@ -37,7 +37,7 @@ This script cycles through Zoom cloud recordings and for each:
 * adds it to a default playlist (which happens to be unlisted)
 * sets video title to be `<Zoom title> - Mmm DD, YYYY` of recorded date
 * Adds video to call-specific playlist based on meeting title:
-  * "Website Monitoring" (alternatively, "Web Mon")
+  * "Website Monitoring" (alternatively, "Web Mon" or "WM")
   * "Data Together"
   * "Community Call"
 * **deletes** original video file from Zoom (**not** audio or chat log)

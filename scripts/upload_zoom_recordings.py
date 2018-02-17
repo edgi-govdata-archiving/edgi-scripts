@@ -124,14 +124,14 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     youtube = main.get_youtube_handler(yt_options)
                     playlist_name = None
 
+                    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
+                        playlist_name = 'Website Monitoring'
+
                     if 'data together' in meeting['topic'].lower():
                         playlist_name = 'Data Together'
 
                     if 'community call' in meeting['topic'].lower():
                         playlist_name = 'Community Calls'
-
-                    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring']):
-                        playlist_name = 'Website Monitoring'
 
                     if playlist_name:
                         print('Adding to call playlist: {}'.format(playlist_name))
