@@ -140,4 +140,3 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                         # We should save the chat log transcript in a comment on the video.
                         client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
                         print("Deleted {} file from Zoom for recording: {}".format(meeting['topic'], file['file_type']))
-                    print(out)
