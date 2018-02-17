@@ -36,6 +36,10 @@ This script cycles through Zoom cloud recordings and for each:
 * uploads video to youtube as unlisted video
 * adds it to a default playlist (which happens to be unlisted)
 * sets video title to be `<Zoom title> - Mmm DD, YYYY` of recorded date
+* Adds video to call-specific playlist based on meeting title:
+  * "Website Monitoring" (alternatively, "Web Mon")
+  * "Data Together"
+  * "Community Call"
 * **deletes** original video file from Zoom (**not** audio or chat log)
 
 Note: the script isn't smart enough to detect duplicate videos being
