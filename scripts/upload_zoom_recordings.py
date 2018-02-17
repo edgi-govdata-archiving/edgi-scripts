@@ -35,6 +35,10 @@ from urllib.parse import urlparse
 from zoomus import ZoomClient
 from constants import USER_TYPES
 
+from youtube_upload import main, playlists
+from types import SimpleNamespace
+
+
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
 
@@ -109,7 +113,28 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--client-secrets=client_secret.json",
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
-                    out = check_output(command)
+                    video_id = check_output(command).strip()
+
+                    youtube_options = {
+                            'client_secrets': 'client_secrets.json',
+                            'credentials_file': '.youtube-upload-credentials.json',
+                            'auth_browser': None,
+                            }
+                    options = SimpleNamespace(**options)
+                    youtube = main.get_youtube_handler(options)
+
+                    if 'data together' in meeting['topic'].lower():
+                        playlist_name = 'Data Together'
+                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
+                    if 'community call' in meeting['topic'].lower():
+                        playlist_name = 'Community Calls'
+                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
+                    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring']):
+                        playlist_name = 'Website Monitoring'
+                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
                     if ZOOM_DELETE_AFTER_UPLOAD:
                         # Just delete the video for now, since that takes the most storage space.
                         # We should save the chat log transcript in a comment on the video.
