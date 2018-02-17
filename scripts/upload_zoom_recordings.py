@@ -122,6 +122,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             }
                     yt_options = SimpleNamespace(**yt_options)
                     youtube = main.get_youtube_handler(yt_options)
+                    playlist_name = None
 
                     if 'data together' in meeting['topic'].lower():
                         playlist_name = 'Data Together'
@@ -132,8 +133,9 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring']):
                         playlist_name = 'Website Monitoring'
 
-                    print('Adding to call playlist: {}'.format(playlist_name))
-                    playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+                    if playlist_name:
+                        print('Adding to call playlist: {}'.format(playlist_name))
+                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
                     if ZOOM_DELETE_AFTER_UPLOAD:
                         # Just delete the video for now, since that takes the most storage space.
