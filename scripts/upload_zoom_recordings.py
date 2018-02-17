@@ -35,6 +35,10 @@ from urllib.parse import urlparse
 from zoomus import ZoomClient
 from constants import USER_TYPES
 
+from youtube_upload import main, playlists
+from types import SimpleNamespace
+
+
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
 
@@ -109,10 +113,32 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--client-secrets=client_secret.json",
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
-                    out = check_output(command)
+                    video_id = check_output(command).strip().decode('utf-8')
+
+                    yt_options = {
+                            'client_secrets': 'client_secret.json',
+                            'credentials_file': '.youtube-upload-credentials.json',
+                            'auth_browser': None,
+                            }
+                    yt_options = SimpleNamespace(**yt_options)
+                    youtube = main.get_youtube_handler(yt_options)
+                    playlist_name = None
+
+                    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
+                        playlist_name = 'Website Monitoring'
+
+                    if 'data together' in meeting['topic'].lower():
+                        playlist_name = 'Data Together'
+
+                    if 'community call' in meeting['topic'].lower():
+                        playlist_name = 'Community Calls'
+
+                    if playlist_name:
+                        print('Adding to call playlist: {}'.format(playlist_name))
+                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
                     if ZOOM_DELETE_AFTER_UPLOAD:
                         # Just delete the video for now, since that takes the most storage space.
                         # We should save the chat log transcript in a comment on the video.
                         client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
                         print("Deleted {} file from Zoom for recording: {}".format(meeting['topic'], file['file_type']))
-                    print(out)
