@@ -113,7 +113,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--client-secrets=client_secret.json",
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
-                    video_id = check_output(command).strip()
+                    video_id = check_output(command).strip().decode('utf-8')
 
                     yt_options = {
                             'client_secrets': 'client_secret.json',
