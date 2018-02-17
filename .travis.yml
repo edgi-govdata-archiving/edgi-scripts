@@ -16,7 +16,3 @@ before_install:
 
 script:
   - python scripts/upload_zoom_recordings.py
-
-branches:
-  only:
-    - master
