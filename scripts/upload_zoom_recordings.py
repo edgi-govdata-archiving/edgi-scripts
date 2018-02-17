@@ -116,7 +116,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     video_id = check_output(command).strip()
 
                     yt_options = {
-                            'client_secrets': 'client_secrets.json',
+                            'client_secrets': 'client_secret.json',
                             'credentials_file': '.youtube-upload-credentials.json',
                             'auth_browser': None,
                             }
