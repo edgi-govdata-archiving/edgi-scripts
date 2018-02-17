@@ -125,15 +125,15 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
                     if 'data together' in meeting['topic'].lower():
                         playlist_name = 'Data Together'
-                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
                     if 'community call' in meeting['topic'].lower():
                         playlist_name = 'Community Calls'
-                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
                     if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring']):
                         playlist_name = 'Website Monitoring'
-                        playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
+                    print('Adding to call playlist: {}'.format(playlist_name))
+                    playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
                     if ZOOM_DELETE_AFTER_UPLOAD:
                         # Just delete the video for now, since that takes the most storage space.
