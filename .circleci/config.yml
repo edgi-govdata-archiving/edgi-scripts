@@ -50,8 +50,8 @@ workflows:
       - build
     triggers:
       - schedule:
-          # 9am UTC => 4am ET / 1am PT
-          cron: "0 9 * * *"
+          # Every 15 minutes
+          cron: "*/15 * * * *"
           filters:
             branches:
               only: master

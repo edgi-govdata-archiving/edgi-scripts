@@ -53,7 +53,7 @@ after upload
 
 There is actually no need to run this script locally, as we have it
 automatically running in the cloud on CircleCI (service explained
-above) at **4am ET / 1am PT daily**.
+above) at **every 15 minutes**.
 
 **For forcing a cloud run on-demand:** Visit [our project page on the
 CircleCI platform][circleci-proj], and click the "Rerun job with SSH"
