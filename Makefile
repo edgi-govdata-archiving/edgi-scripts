@@ -7,7 +7,7 @@ run-yt-auth: setup ## Authenticate against YouTube API to generate credentials f
 run-yt-upload: setup ## Upload Zoom meetings to YouTube
 	python scripts/upload_zoom_recordings.py
 
-run-ia-healthcheck: setup ## Checked the health status of the Internet Archive
+run-ia-healthcheck: setup ## Check the health status of the Internet Archive
 	python scripts/ia_healthcheck.py
 
 %:
