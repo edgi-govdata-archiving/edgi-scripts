@@ -45,7 +45,7 @@ workflows:
   commit:
     jobs:
       - build
-  nightly:
+  scheduled:
     jobs:
       - build
     triggers:
