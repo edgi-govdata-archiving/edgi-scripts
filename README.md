@@ -34,9 +34,11 @@ bash scripts/archive.sh envirodatagov.org
 This script cycles through Zoom cloud recordings and for each:
 
 * uploads video to youtube as unlisted video
-* adds it to a default playlist (which happens to be unlisted)
 * sets video title to be `<Zoom title> - Mmm DD, YYYY` of recorded date
-* Adds video to call-specific playlist based on meeting title:
+* sets video license to "Creative Commons - Attribution"
+* sets video category to "Science & Technology"
+* adds video to a default unlisted playlist, "Uploads from Zoom"
+* adds video to call-specific playlist based on meeting title:
   * "Website Monitoring" (alternatively, "Web Mon" or "WM")
   * "Data Together"
   * "Community Call"
