@@ -50,7 +50,7 @@ workflows:
   commit:
     jobs:
       - build
-  scheduled:
+  youtube-upload:
     jobs:
       - build
     triggers:
