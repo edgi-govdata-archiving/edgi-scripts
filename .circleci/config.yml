@@ -10,6 +10,11 @@ jobs:
       - checkout
 
       - run:
+          name: skip destructive action on non-master
+          command: |
+            echo '[[ "master" != "$CIRCLE_BRANCH" ]] && unset EDGI_ZOOM_DELETE_AFTER_UPLOAD' >> $BASH_ENV
+
+      - run:
           name: decrypt files
           command: |
             openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d
