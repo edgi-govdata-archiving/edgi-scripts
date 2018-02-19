@@ -52,7 +52,13 @@ after upload
 [![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
 
 There is actually no need to run this script locally, as we have it
-running daily on CircleCI (service explained above).
+automatically running in the cloud on CircleCI (service explained
+above) at **every 15 minutes**.
+
+**For forcing a cloud run on-demand:** Visit [our project page on the
+CircleCI platform][circleci-proj], and click the "Rerun job with SSH"
+button on the latest build page. (You will need to have push access on
+the repo itself.)
 
 * We added our secret environment variables, (`EDGI_ZOOM_API_KEY` and
   `EDGI_ZOOM_API_SECRET`), to the [CircleCI configuration
@@ -66,13 +72,6 @@ secret that CircleCI already knows. We stored the encrypted versions of
 these two JSON files in the repo. We added a line to the [CircleCI
 config][circleci-config2] to decrypt them for use when running in the
 cloud.
-
-**For automatic runs of the script:** It kicks off daily around 6am ET.
-
-**For manual runs of the script:** Visit [our project page on the
-CircleCI
-platform][circleci-proj], and click the "Rebuild" button on the most
-recent build number.
 
 **Setup**
 

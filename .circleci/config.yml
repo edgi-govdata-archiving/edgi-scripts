@@ -50,7 +50,8 @@ workflows:
       - build
     triggers:
       - schedule:
-          cron: "0 0 * * *"
+          # Every 15 minutes
+          cron: "*/15 * * * *"
           filters:
             branches:
               only: master
