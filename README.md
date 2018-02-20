@@ -31,7 +31,8 @@ bash scripts/archive.sh envirodatagov.org
 
 ### Zoom-to-YouTube Uploader: `upload_zoom_recordings.py` and `auth.py`
 
-This script cycles through Zoom cloud recordings and for each:
+This script cycles through each Zoom cloud recording longer than 60
+seconds in duration and:
 
 * uploads video to youtube as unlisted video
 * adds it to a default playlist (which happens to be unlisted)
