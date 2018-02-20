@@ -115,7 +115,9 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--client-secrets=client_secret.json",
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
-                    video_id = check_output(command).strip().decode('utf-8')
+                    print('Adding to main playlist: Uploads from Zoom')
+                    FNULL = open(os.devnull, 'w')
+                    video_id = check_output(command, stderr=FNULL).strip().decode('utf-8')
 
                     yt_options = {
                             'client_secrets': 'client_secret.json',
