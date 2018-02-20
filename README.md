@@ -90,7 +90,6 @@ mkvirtualenv edgi-scripts --python=`which python3`
 
 ```
 workon edgi-scripts
-pip install -r requirements.txt
 
 # Copy client_secret.json to repo root dir. This is downloaded from
 # Google API Console, and will need to be renamed.
@@ -102,7 +101,7 @@ pip install -r requirements.txt
 # `.youtube-upload-credentials.json` in the repo root dir. If running the
 # script on a server is required, you will # need to transfer this file
 # from your # workstation onto the server.
-python scripts/auth.py
+make run-yt-auth
 
 # Prepare to download all videos from Zoom
 # See: https://zoom.us/developer/api/credential
@@ -110,7 +109,7 @@ export EDGI_ZOOM_API_KEY=xxxxxxx
 export EDGI_ZOOM_API_SECRET=xxxxxxxx
 
 # Download from Zoom and upload to YouTube
-python scripts/upload_zoom_recordings.py
+make run-yt-upload
 ```
 
 # Contributing Guidelines
