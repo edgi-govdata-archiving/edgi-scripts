@@ -45,7 +45,7 @@ workflows:
   commit:
     jobs:
       - build
-  nightly:
+  youtube-upload:
     jobs:
       - build
     triggers:
