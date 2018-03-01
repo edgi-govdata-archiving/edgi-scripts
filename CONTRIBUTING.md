@@ -1,6 +1,9 @@
-# How to Contribute
+# Contributing Guidelines
 
-Here are some quick notes on contributing:
+We love improvements to our tools! EDGI has general [guidelines for
+contributing][edgi-contribute] to all of our organizational repos.
+
+Here are some notes specific to this project:
 
 * We have configured this project on CircleCI to [only run on pull
   requests and `master` branch][pr-config]. We have further configured
@@ -9,4 +12,5 @@ requests. (As mentioned in README, video are normally deleted after
 upload.)
 
 <!-- Links -->
-   [pr-config]: https://imgur.com/leaJNBb
+   [pr-config]: docs/screenshot-circleci-only-prs.png
+   [edgi-contribute]: https://github.com/edgi-govdata-archiving/overview/blob/master/CONTRIBUTING.md
