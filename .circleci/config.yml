@@ -27,7 +27,8 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements.txt
+            # When fetching package from new git repo, use (w)ipe action
+            pip install -r requirements.txt --exists-action w
 
       - save_cache:
           paths:
