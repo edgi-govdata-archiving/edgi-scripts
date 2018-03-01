@@ -56,7 +56,7 @@ after upload
 
 There is actually no need to run this script locally, as we have it
 automatically running in the cloud on CircleCI (service explained
-above) at **every 15 minutes**.
+above) **every 15 minutes**.
 
 **For forcing a cloud run on-demand:** Visit [our project page on the
 CircleCI platform][circleci-proj], and click the "Rerun job with SSH"
@@ -120,6 +120,8 @@ python scripts/upload_zoom_recordings.py
 We love improvements to our tools! EDGI has general [guidelines for
 contributing](https://github.com/edgi-govdata-archiving/overview/blob/master/CONTRIBUTING.md)
 to all of our organizational repos.
+
+For repo-specific details, see our [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License & Copyright
 
