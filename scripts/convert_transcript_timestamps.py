@@ -33,7 +33,7 @@ def process(transcript_file):
     with open(transcript_file) as f:
         content = f.readlines()
     for line in content:
-        line_re = re.compile('^(?P<timestamp>.+?)\s+(?P<author>.+?): (?P<message>.+)')
+        line_re = re.compile('^(?P<timestamp>.+?)\s+(?P<author>.+?):\s+(?P<message>.+)')
         result = re.match(line_re, line)
         data = {}
         data.update({'ts': result.group('timestamp')})
