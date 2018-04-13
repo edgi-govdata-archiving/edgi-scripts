@@ -1,3 +1,4 @@
 requests
 -e git://github.com/edgi-govdata-archiving/youtube-upload.git@add-license-option#egg=youtube-upload
 zoomus
+click

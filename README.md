@@ -40,7 +40,8 @@ directly to the spot in the video where the comment was made.
 **Usage**
 
 ```
-python scripts/convert_transcript_timestamps.py GMT20180412-150205_EDJ-Biweek.txt > transcript.txt
+python scripts/convert_transcript_timestamps.py --help
+python scripts/convert_transcript_timestamps.py transcript.txt > transposed-transcript.txt
 ```
 
 ### Zoom-to-YouTube Uploader: `upload_zoom_recordings.py` and `auth.py`
