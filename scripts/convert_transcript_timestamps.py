@@ -1,8 +1,7 @@
 #!/usr/bin/env python
+import click
 import re
 from datetime import timedelta
-import sys
-import click
 
 OUT_TRANSCRIPT_LINE_TEMPLATE = '{ts} {author}: {msg}\n'
 IN_TRANSCRIPT_START_MARKER = 'START'
