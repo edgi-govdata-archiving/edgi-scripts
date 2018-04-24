@@ -29,6 +29,21 @@ the EDGI website are backed up to the Internet Archive.
 bash scripts/archive.sh envirodatagov.org
 ```
 
+### Convert Zoom timestamps for YouTube: `convert_transcript_timestamps.py`
+
+This script is used from the terminal to convert the Zoom chat
+transcript into a form that's friendly to post to YouTube video
+descriptions or comments. When the Zoom timestamps are shifted to
+account for when the recording started, then the timecodes will link
+directly to the spot in the video where the comment was made.
+
+**Usage**
+
+```
+python scripts/convert_transcript_timestamps.py --help
+python scripts/convert_transcript_timestamps.py transcript.txt > transposed-transcript.txt
+```
+
 ### Zoom-to-YouTube Uploader: `upload_zoom_recordings.py` and `auth.py`
 
 This script cycles through each Zoom cloud recording longer than 60
