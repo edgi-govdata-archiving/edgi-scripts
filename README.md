@@ -10,6 +10,7 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
 ## Table of Contents
 
 - [Technologies Used](#technologies-used)
+- [About These Automated Scripts](#about-these-automated-scripts)
 - [Script Catalog](#script-catalog)
 
 ## Technologies Used
@@ -50,6 +51,8 @@ account for when the recording started, then the timecodes will link
 directly to the spot in the video where the comment was made.
 
 This script is not run automatically.
+
+- [Sample chat transcript](https://gist.github.com/patcon/68820d1eb90c0bd707c773ce57312d92)
 
 See commands
 
