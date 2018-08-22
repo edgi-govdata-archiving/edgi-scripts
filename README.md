@@ -1,10 +1,11 @@
 # EDGI Scripts
 
-This is a repository for scripts that are part of EDGI's digital
-infrastructure.
+[![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
+[![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
 
-These scripts are usually intended to be run regularly in an automated
-fashion
+Helper scripts for EDGI's digital infrastructure.
+
+We use this as a catch-all for simple scripts that help with repeating tasks. Many of them run automatically in the cloud.
 
 ## Table of Contents
 
@@ -13,8 +14,17 @@ fashion
 
 ## Technologies Used
 
-* [**CircleCI.**][circleci] A script-running service
-  that [runs scheduled tasks][circleci-cron] for us in the cloud.
+- **Python.** A programming langauge common in scripting.
+- [**Click.**][click] A Python library for writing simple command-line
+  tools.
+- [**CircleCI.**][circleci] A script-running service that [runs scheduled
+  tasks][circleci-cron] for us in the cloud.
+  
+## About these Automated Scripts
+
+Some of these scripts are automatically run before and after hacknight,
+using CircleCI's workflow feature. The schedule is set in the
+[`.circleci/config.yml`][circleci-config1] file within this repo.
 
 ## Script Catalog
 
@@ -22,6 +32,8 @@ fashion
 
 This script is used to run periodically and ensure that recent copies of
 the EDGI website are backed up to the Internet Archive.
+
+This script is not run automatically.
 
 **Usage**
 
@@ -31,11 +43,15 @@ bash scripts/archive.sh envirodatagov.org
 
 ### Convert Zoom timestamps for YouTube: `convert_transcript_timestamps.py`
 
-This script is used from the terminal to convert the Zoom chat
-transcript into a form that's friendly to post to YouTube video
+This script is used from the local workstation to convert the Zoom chat
+text transcript into a form that's friendly to post into YouTube video
 descriptions or comments. When the Zoom timestamps are shifted to
 account for when the recording started, then the timecodes will link
 directly to the spot in the video where the comment was made.
+
+This script is not run automatically.
+
+See commands
 
 **Usage**
 
@@ -60,18 +76,13 @@ seconds in duration and:
   * "Community Call"
 * **deletes** original video file from Zoom (**not** audio or chat log)
 
+This script is run every 15 minutes.
+
 Note: the script isn't smart enough to detect duplicate videos being
 uploaded more than once, but YouTube will recognize and disable them
 after upload
 
 #### Usage via CircleCI
-
-[![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
-[![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
-
-There is actually no need to run this script locally, as we have it
-automatically running in the cloud on CircleCI (service explained
-above) **every 15 minutes**.
 
 **For forcing a cloud run on-demand:** Visit [our project page on the
 CircleCI platform][circleci-proj], and click the "Rerun job with SSH"
@@ -152,6 +163,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the [`LICENSE`](/LICENSE) file for details.
 
 <!-- Links -->
+[click]: http://click.pocoo.org/5/
 [circleci]: https://circleci.com/docs/1.0/introduction/
 [circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
 [circleci-envvars]: https://circleci.com/docs/1.0/environment-variables/#setting-environment-variables-for-all-commands-without-adding-them-to-git
