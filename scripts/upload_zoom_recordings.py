@@ -28,6 +28,7 @@
 from datetime import datetime
 import json
 import os
+import re
 import requests
 from subprocess import check_output
 import tempfile
@@ -87,6 +88,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
     meetings = client.recording.list(host_id=user_id).json()['meetings']
     meetings = sorted(meetings, key=lambda m: m['start_time'])
+    # Filter recordings less than 1 minute
     meetings = filter(lambda m: m['duration'] > 1, meetings)
     for meeting in meetings:
         print('Processing recording: ' + meeting['topic'] + ' from ' + meeting['start_time'])
@@ -106,6 +108,9 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     print('Download from ' + url + ' ...')
                     filepath = download_file(url, tmpdirname)
                     title = meeting['topic'] + ' - ' + pretty_date(meeting['start_time'])
+                    # These characters don't work within Python subprocess commands
+                    chars_to_strip = '<>'
+                    title = re.sub('['+chars_to_strip+']', '', title)
                     command = [
                             "youtube-upload", filepath,
                             "--title=" + title,
