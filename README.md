@@ -23,8 +23,8 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
   
 ## About these Automated Scripts
 
-Some of these scripts are automatically run before and after hacknight,
-using CircleCI's workflow feature. The schedule is set in the
+Some of these scripts are automatically at regular intervals,
+using CircleCI's "workflow" feature. The schedule is set in the
 [`.circleci/config.yml`][circleci-config1] file within this repo.
 
 ## Script Catalog
