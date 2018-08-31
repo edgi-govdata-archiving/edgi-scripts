@@ -79,7 +79,7 @@ seconds in duration and:
   * "Community Call"
 * **deletes** original video file from Zoom (**not** audio or chat log)
 
-This script is run every 15 minutes.
+This script is run every 30 minutes.
 
 Note: the script isn't smart enough to detect duplicate videos being
 uploaded more than once, but YouTube will recognize and disable them
