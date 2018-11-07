@@ -57,7 +57,7 @@ workflows:
     triggers:
       - schedule:
           # Every 30 minutes
-          cron: "0,30 * * * *"
+          cron: "0,30 * * * 1-5"
           filters:
             branches:
               only: master
