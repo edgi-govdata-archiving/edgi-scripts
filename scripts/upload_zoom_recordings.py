@@ -127,7 +127,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     try:
                         video_id = subprocess.check_output(command, stderr=subprocess.STDOUT).strip().decode('utf-8')
                     except subprocess.CalledProcessError as exc:
-                        print('Output:' + exc.output)
+                        print('Error output: {}'.format(exc.output))
 
                     yt_options = {
                             'client_secrets': 'client_secret.json',
