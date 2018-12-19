@@ -125,7 +125,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     print('Adding to main playlist: Uploads from Zoom')
                     FNULL = open(os.devnull, 'w')
                     try:
-                        video_id = subprocess.check_output(command, stderr=subprocess.STDOUT).strip().decode('utf-8')
+                        video_id = subprocess.check_output(command, stderr=FNULL).strip().decode('utf-8')
                     except subprocess.CalledProcessError as exc:
                         print('Error output: {}'.format(exc.output))
 
