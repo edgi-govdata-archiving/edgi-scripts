@@ -30,8 +30,9 @@ import json
 import os
 import re
 import requests
-import subprocess
 import tempfile
+
+from subprocess import check_output
 from urllib.parse import urlparse
 from zoomus import ZoomClient
 from constants import USER_TYPES
@@ -124,10 +125,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             ]
                     print('Adding to main playlist: Uploads from Zoom')
                     FNULL = open(os.devnull, 'w')
-                    try:
-                        video_id = subprocess.check_output(command, stderr=FNULL).strip().decode('utf-8')
-                    except subprocess.CalledProcessError as exc:
-                        print('Error output: {}'.format(exc.output))
+                    video_id = check_output(command, stderr=FNULL).strip().decode('utf-8')
 
                     yt_options = {
                             'client_secrets': 'client_secret.json',
