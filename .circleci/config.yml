@@ -33,7 +33,7 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             # When fetching package from new git repo, use (w)ipe action
-            pip install -r requirements.txt --exists-action w
+            pip install -r requirements.txt --exists-action w --force-reinstall
 
       - save_cache:
           paths:
