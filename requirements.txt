@@ -1,5 +1,5 @@
 requests
--e git://github.com/lightandluck/youtube-upload.git@add-license-option#egg=youtube-upload-0.8.2
+-e git://github.com/lightandluck/youtube-upload.git@add-license-option#egg=youtube-upload-0.8.3
 zoomus
 click
 oauth2client
