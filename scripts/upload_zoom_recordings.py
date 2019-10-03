@@ -51,7 +51,7 @@ DEFAULT_YOUTUBE_PLAYLIST = 'Uploads from Zoom'
 DEFAULT_YOUTUBE_CATEGORY = 'Science & Technology'
 DEFAULT_VIDEO_LICENSE = 'creativeCommon'
 
-client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
+client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET, version=1)
 
 # Get main account, which should be 'pro'
 pro_users = [user for user in client.user.list().json()['users'] if user['type'] >= USER_TYPES['pro'] ]
