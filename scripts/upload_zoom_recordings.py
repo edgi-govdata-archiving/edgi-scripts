@@ -26,6 +26,7 @@
 #     See README for how to generate these files.
 
 from datetime import datetime
+import functools
 import json
 import os
 import re
@@ -82,6 +83,17 @@ def download_file(url, download_path):
 
     return filepath
 
+@functools.lru_cache()
+def get_youtube_client():
+    yt_options = {
+        'client_secrets': 'client_secret.json',
+        'credentials_file': '.youtube-upload-credentials.json',
+        'auth_browser': None,
+    }
+    yt_options = SimpleNamespace(**yt_options)
+    youtube = main.get_youtube_handler(yt_options)
+    return youtube
+
 DO_FILTER = False
 
 with tempfile.TemporaryDirectory() as tmpdirname:
@@ -126,13 +138,9 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     FNULL = open(os.devnull, 'w')
                     video_id = check_output(command, stderr=FNULL).strip().decode('utf-8')
 
-                    yt_options = {
-                            'client_secrets': 'client_secret.json',
-                            'credentials_file': '.youtube-upload-credentials.json',
-                            'auth_browser': None,
-                            }
-                    yt_options = SimpleNamespace(**yt_options)
-                    youtube = main.get_youtube_handler(yt_options)
+                    # TODO: we could use this client to upload the video,
+                    # which would save on API calls if we have > 1 video.
+                    youtube = get_youtube_client()
                     playlist_name = None
 
                     if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
