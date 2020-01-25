@@ -31,7 +31,7 @@ import json
 import os
 import re
 import requests
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, PIPE
 import sys
 import tempfile
 from urllib.parse import urlparse
@@ -136,16 +136,15 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             "--credentials-file=.youtube-upload-credentials.json"
                             ]
                     print('Adding to main playlist: Uploads from Zoom')
-                    FNULL = open(os.devnull, 'w')
+                    
                     try:
-                        video_id = check_output(command, stderr=FNULL).strip().decode('utf-8')
+                        video_id = check_output(command, stderr=PIPE).strip().decode('utf-8')
                     except CalledProcessError as error:
-                        # Make sure we log what the script actually output!
-                        if error.output:
-                            print(f'Upload failed with message: {error.output}', file=sys.stderr)
-                        
-                        # But still stop execution afterward.
-                        raise
+                        print(f'  Upload failed with message:\n'
+                              f'{error.stderr.decode("utf-8")}'
+                              f'{error.stdout.decode("utf-8")}',
+                              file=sys.stderr)
+                        sys.exit(1)
 
                     # TODO: we could use this client to upload the video,
                     # which would save on API calls if we have > 1 video.
