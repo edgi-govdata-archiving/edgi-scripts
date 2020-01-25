@@ -104,29 +104,28 @@ with tempfile.TemporaryDirectory() as tmpdirname:
     # Filter recordings less than 1 minute
     meetings = filter(lambda m: m['duration'] > 1, meetings)
     for meeting in meetings:
-        print('Processing meeting: ' + meeting['topic'] + ' from ' + meeting['start_time'])
+        print(f'Processing meeting: {meeting["topic"]} from {meeting["start_time"]}')
         # 3. filter by criteria (no-op for now)
         if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
-            print('Skipping...')
+            print('  Skipping...')
             continue
         
         videos = [file for file in meeting['recording_files']
                   if file['file_type'].lower() == 'mp4']
         
         if len(videos) == 0:
-            print('No videos to upload, skipping...')
+            print(f'  No videos to upload: {meeting["topic"]}')
             continue
         elif any((file['file_size'] == 0 for file in videos)):
-            print(f'Meeting still processing: {meeting["topic"]}')
+            print(f'  Meeting still processing: {meeting["topic"]}')
             continue
 
-        print('Recording is permitted for upload!')
+        print('  Recording is permitted for upload!')
         for file in videos:
-            eligible_files += 1
             url = file['download_url']
-            print('Download from ' + url + ' ...')
+            print(f'  Download from {url}...')
             filepath = download_file(url, tmpdirname)
-            title = meeting['topic'] + ' - ' + pretty_date(meeting['start_time'])
+            title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
             # These characters don't work within Python subprocess commands
             chars_to_strip = '<>'
             title = re.sub('['+chars_to_strip+']', '', title)
@@ -141,7 +140,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                 "--client-secrets=client_secret.json",
                 "--credentials-file=.youtube-upload-credentials.json"
             ]
-            print('Adding to main playlist: Uploads from Zoom')
+            print('  Adding to main playlist: Uploads from Zoom')
             
             try:
                 video_id = check_output(command, stderr=PIPE).strip().decode('utf-8')
@@ -167,11 +166,11 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                 playlist_name = 'Community Calls'
 
             if playlist_name:
-                print('Adding to call playlist: {}'.format(playlist_name))
+                print('  Adding to call playlist: {}'.format(playlist_name))
                 playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
             if ZOOM_DELETE_AFTER_UPLOAD:
                 # Just delete the video for now, since that takes the most storage space.
                 # We should save the chat log transcript in a comment on the video.
                 client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
-                print("Deleted {} file from Zoom for recording: {}".format(file['file_type'], meeting['topic']))
+                print("  Deleted {} file from Zoom for recording: {}".format(file['file_type'], meeting['topic']))
