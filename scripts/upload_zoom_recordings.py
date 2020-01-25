@@ -109,6 +109,10 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
             print('Skipping...')
             continue
+        
+        if len(meeting['recording_files']) == 0:
+            print('No recordings to upload, skipping...')
+            continue
 
         print('Recording is permitted for upload!')
         for file in meeting['recording_files']:
