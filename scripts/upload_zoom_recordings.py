@@ -31,7 +31,8 @@ import json
 import os
 import re
 import requests
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
+import sys
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
@@ -136,7 +137,15 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                             ]
                     print('Adding to main playlist: Uploads from Zoom')
                     FNULL = open(os.devnull, 'w')
-                    video_id = check_output(command, stderr=FNULL).strip().decode('utf-8')
+                    try:
+                        video_id = check_output(command, stderr=FNULL).strip().decode('utf-8')
+                    except CalledProcessError as error:
+                        # Make sure we log what the script actually output!
+                        if error.output:
+                            print(f'Upload failed with message: {error.output}', file=sys.stderr)
+                        
+                        # But still stop execution afterward.
+                        raise
 
                     # TODO: we could use this client to upload the video,
                     # which would save on API calls if we have > 1 video.
