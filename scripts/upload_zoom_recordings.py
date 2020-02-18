@@ -39,6 +39,7 @@ from zoomus import ZoomClient
 from constants import USER_TYPES
 
 from youtube_upload import main, playlists
+from basic_youtube_upload import get_authenticated_service, initialize_upload
 from types import SimpleNamespace
 
 
@@ -97,6 +98,8 @@ def get_youtube_client():
 
 DO_FILTER = False
 
+uploaded = 0
+
 with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
     meetings = client.recording.list(host_id=user_id).json()['meetings']
@@ -124,32 +127,47 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         for file in videos:
             url = file['download_url']
             print(f'  Download from {url}...')
+            filepath = download_file(url, 'videos')
+            if uploaded > 0:
+                continue
+            else:
+                uploaded += 1
             filepath = download_file(url, tmpdirname)
             title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
             # These characters don't work within Python subprocess commands
             chars_to_strip = '<>'
             title = re.sub('['+chars_to_strip+']', '', title)
-            command = [
-                "youtube-upload", filepath,
-                "--title=" + title,
-                "--playlist=" + DEFAULT_YOUTUBE_PLAYLIST,
-                "--category=" + DEFAULT_YOUTUBE_CATEGORY,
-                "--license=" + DEFAULT_VIDEO_LICENSE,
-                "--recording-date=" + fix_date(meeting['start_time']),
-                "--privacy=unlisted",
-                "--client-secrets=client_secret.json",
-                "--credentials-file=.youtube-upload-credentials.json"
-            ]
+
             print('  Adding to main playlist: Uploads from Zoom')
+            upload_client = get_authenticated_service('client_secret.json')
+            initialize_upload(upload_client,
+                              filepath,
+                              title=title,
+                            #   playlist=x, NO PLAYLIST SUPPORT FOR NOW
+                              category=28, # TODO: get category by name: DEFAULT_YOUTUBE_CATEGORY,
+                              license=DEFAULT_VIDEO_LICENSE,
+                              recording_date=fix_date(meeting['start_time']),
+                              privacy_status='unlisted')
+            # command = [
+            #     "youtube-upload", filepath,
+            #     "--title=" + title,
+            #     "--playlist=" + DEFAULT_YOUTUBE_PLAYLIST,
+            #     "--category=" + DEFAULT_YOUTUBE_CATEGORY,
+            #     "--license=" + DEFAULT_VIDEO_LICENSE,
+            #     "--recording-date=" + fix_date(meeting['start_time']),
+            #     "--privacy=unlisted",
+            #     "--client-secrets=client_secret.json",
+            #     "--credentials-file=.youtube-upload-credentials.json"
+            # ]
             
-            try:
-                video_id = check_output(command, stderr=PIPE).strip().decode('utf-8')
-            except CalledProcessError as error:
-                print(f'  Upload failed with message:\n'
-                      f'{error.stderr.decode("utf-8")}'
-                      f'{error.stdout.decode("utf-8")}',
-                      file=sys.stderr)
-                sys.exit(1)
+            # try:
+            #     video_id = check_output(command, stderr=PIPE).strip().decode('utf-8')
+            # except CalledProcessError as error:
+            #     print(f'  Upload failed with message:\n'
+            #           f'{error.stderr.decode("utf-8")}'
+            #           f'{error.stdout.decode("utf-8")}',
+            #           file=sys.stderr)
+            #     sys.exit(1)
 
             # TODO: we could use this client to upload the video,
             # which would save on API calls if we have > 1 video.
