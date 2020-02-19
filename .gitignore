@@ -4,3 +4,4 @@ client_secret.json
 *.json
 *.mp4
 __pycache__/
+scratch.*
