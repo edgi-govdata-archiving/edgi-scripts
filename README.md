@@ -131,8 +131,9 @@ pip install -r requirements.txt
 # This will need to be done from a system with a windowed browser (ie.
 # not a server). It will generate a file named
 # `.youtube-upload-credentials.json` in the repo root dir. If running the
-# script on a server is required, you will # need to transfer this file
-# from your # workstation onto the server.
+# script on a server is required, you will 
+# need to transfer this file
+# from your workstation onto the server.
 python scripts/auth.py
 
 # Prepare to download all videos from Zoom
