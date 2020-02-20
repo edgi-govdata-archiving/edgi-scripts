@@ -38,7 +38,7 @@ from urllib.parse import urlparse
 from zoomus import ZoomClient
 from constants import USER_TYPES
 
-from youtube_upload import main, playlists
+# from youtube_upload import main, playlists
 from basic_youtube_upload import get_authenticated_service, initialize_upload
 from types import SimpleNamespace
 
@@ -127,7 +127,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         for file in videos:
             url = file['download_url']
             print(f'  Download from {url}...')
-            filepath = download_file(url, 'videos')
+            # filepath = download_file(url, 'videos')
             if uploaded > 0:
                 continue
             else:
