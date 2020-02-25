@@ -43,7 +43,7 @@ RETRIABLE_STATUS_CODES = [500, 502, 503, 504]
 # For more information about the client_secrets.json file format, see:
 #   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 CLIENT_SECRETS_FILE = 'client_secret.json'
-
+YOUTUBE_CREDENTIALS_FILE = '.youtube-upload-credentials.json'
 # This OAuth 2.0 access scope allows an application to upload files to the
 # authenticated user's YouTube channel, but doesn't allow other types of access.
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube.force-ssl']
@@ -53,12 +53,10 @@ API_VERSION = 'v3'
 VALID_PRIVACY_STATUSES = ('public', 'private', 'unlisted')
 
 
-# Authorize the request and store authorization credentials.
-def get_authenticated_service(secrets_path):
-    flow = InstalledAppFlow.from_client_secrets_file(secrets_path, SCOPES)
-    credentials = flow.run_console()
+# Create client from stored authorization credentials.
+def get_youtube_client():
+    credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(YOUTUBE_CREDENTIALS_FILE)
     return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
-
 
 def initialize_upload(youtube, file, title='Test Title', description=None,
                       category=None, tags=None, privacy_status='private',
@@ -104,7 +102,7 @@ def initialize_upload(youtube, file, title='Test Title', description=None,
         media_body=MediaFileUpload(file, chunksize=-1, resumable=True)
     )
 
-    resumable_upload(insert_request)
+    return resumable_upload(insert_request)
 
 # This method implements an exponential backoff strategy to resume a
 # failed upload.
@@ -119,6 +117,7 @@ def resumable_upload(request):
             if response is not None:
                 if 'id' in response:
                     print('Video id "%s" was successfully uploaded.' % response['id'])
+                    return response['id']
                 else:
                     raise ValueError('The upload failed with an unexpected response: %s' % response)
         except HttpError as e:
@@ -142,49 +141,9 @@ def resumable_upload(request):
             time.sleep(sleep_seconds)
 
 
-def upload_video(path, youtube_secrets_file, **kwargs):
-    youtube = get_authenticated_service(youtube_secrets_file)
+def upload_video(path, **kwargs):
+    youtube = get_youtube_client()
     try:
         initialize_upload(youtube, file=path, **kwargs)
     except HttpError as e:
         print(f'An HTTP error {e.resp.status} occurred:\n{e.content}')
-
-def add_video_to_playlist(youtube,videoID,playlistID):
-    request = youtube.playlistItems().insert(
-        part="snippet",
-        body={
-          "snippet": {
-            "playlistId": playlistID,
-            "position": 2,
-            "resourceId": {
-              "kind": "youtube#video",
-              "videoId": videoID
-            }
-          }
-        }
-    )
-    response = request.execute()
-
-    print(response)
-
-# if __name__ == '__main__':
-#   parser = argparse.ArgumentParser()
-#   parser.add_argument('--file', required=True, help='Video file to upload')
-#   parser.add_argument('--title', help='Video title', default='Test Title')
-#   parser.add_argument('--description', help='Video description',
-#     default='Test Description')
-#   parser.add_argument('--category', default='22',
-#     help='Numeric video category. ' +
-#       'See https://developers.google.com/youtube/v3/docs/videoCategories/list')
-#   parser.add_argument('--keywords', help='Video keywords, comma separated',
-#     default='')
-#   parser.add_argument('--privacyStatus', choices=VALID_PRIVACY_STATUSES,
-#     default='private', help='Video privacy status.')
-#   args = parser.parse_args()
-
-#   youtube = get_authenticated_service()
-
-#   try:
-#     initialize_upload(youtube, args)
-#   except HttpError, e:
-#     print 'An HTTP error %d occurred:\n%s' % (e.resp.status, e.content)
