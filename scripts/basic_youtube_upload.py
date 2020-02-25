@@ -46,7 +46,7 @@ CLIENT_SECRETS_FILE = 'client_secret.json'
 
 # This OAuth 2.0 access scope allows an application to upload files to the
 # authenticated user's YouTube channel, but doesn't allow other types of access.
-SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
+SCOPES = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube.force-ssl']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
@@ -148,6 +148,24 @@ def upload_video(path, youtube_secrets_file, **kwargs):
         initialize_upload(youtube, file=path, **kwargs)
     except HttpError as e:
         print(f'An HTTP error {e.resp.status} occurred:\n{e.content}')
+
+def add_video_to_playlist(youtube,videoID,playlistID):
+    request = youtube.playlistItems().insert(
+        part="snippet",
+        body={
+          "snippet": {
+            "playlistId": playlistID,
+            "position": 2,
+            "resourceId": {
+              "kind": "youtube#video",
+              "videoId": videoID
+            }
+          }
+        }
+    )
+    response = request.execute()
+
+    print(response)
 
 # if __name__ == '__main__':
 #   parser = argparse.ArgumentParser()
