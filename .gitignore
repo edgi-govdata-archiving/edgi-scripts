@@ -5,3 +5,4 @@ client_secret.json
 *.mp4
 __pycache__/
 scratch.*
+.DS_Store
