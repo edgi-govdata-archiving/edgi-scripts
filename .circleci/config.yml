@@ -42,9 +42,7 @@ jobs:
           name: run script
           command: |
             . venv/bin/activate
-            # Temporarily disabling script
-            echo 'SCRIPT DISABLED'
-            # python3 scripts/upload_zoom_recordings.py
+            python3 scripts/upload_zoom_recordings.py
 
 workflows:
   version: 2

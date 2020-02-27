@@ -88,7 +88,6 @@ def download_file(url, download_path):
 
 DO_FILTER = False
 
-uploaded = 0
 youtube = get_youtube_client()
 with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
@@ -117,12 +116,9 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         for file in videos:
             url = file['download_url']
             print(f'  Download from {url}...')
-            if uploaded > 0:
-                continue
-            else:
-                uploaded += 1
             filepath = download_file(url, tmpdirname)
             title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
+
             # These characters don't work within Python subprocess commands
             chars_to_strip = '<>'
             title = re.sub('['+chars_to_strip+']', '', title)

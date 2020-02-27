@@ -5,6 +5,9 @@ def debug(obj, fd=sys.stderr):
     """Write obj to standard error."""
     print(obj, file=fd)
 
+# TODO: Place playlist_id of PUBLIC playlists into constants.py instead of looking up in youtube
+# because that eats some of our quota credits. Probably put playlist_id of unlisted playlists
+# in env variables in CircleCI.
 def get_playlist(youtube, title):
     """Return users's playlist ID by title (None if not found)"""
     playlists = youtube.playlists()
