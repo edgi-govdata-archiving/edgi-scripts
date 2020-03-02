@@ -1,5 +1,9 @@
 requests
--e git://github.com/edgi-govdata-archiving/youtube-upload.git@master#egg=youtube-upload
 zoomus
 click
 oauth2client
+google-api-python-client ~=1.7.11
+google-auth ~=1.11.2
+google-auth-oauthlib ~=0.4.1
+google-auth-httplib2 ~=0.0.3
+httplib2 ~=0.17.0

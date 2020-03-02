@@ -131,8 +131,9 @@ pip install -r requirements.txt
 # This will need to be done from a system with a windowed browser (ie.
 # not a server). It will generate a file named
 # `.youtube-upload-credentials.json` in the repo root dir. If running the
-# script on a server is required, you will # need to transfer this file
-# from your # workstation onto the server.
+# script on a server is required, you will 
+# need to transfer this file
+# from your workstation onto the server.
 python scripts/auth.py
 
 # Prepare to download all videos from Zoom
@@ -170,7 +171,7 @@ See the [`LICENSE`](/LICENSE) file for details.
 [circleci]: https://circleci.com/docs/1.0/introduction/
 [circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
 [circleci-envvars]: https://circleci.com/docs/1.0/environment-variables/#setting-environment-variables-for-all-commands-without-adding-them-to-git
-[circleci-encfile]: https://circleci.com/docs/1.0/environment-variables/#keeping-encrypted-environment-variables-in-source-code
+[circleci-encfile]: https://github.com/circleci/encrypted-files
 [circleci-config1]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
 [circleci-config2]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
 [circleci-proj]: https://circleci.com/gh/edgi-govdata-archiving/edgi-scripts
