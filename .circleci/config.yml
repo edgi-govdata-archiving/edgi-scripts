@@ -38,24 +38,28 @@ jobs:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
-      - run:
-          name: run script
-          command: |
-            . venv/bin/activate
-            python3 scripts/upload_zoom_recordings.py
+      # TODO: re-enable this when we have the upload job fixed so it doesn't
+      # break with differently ordered playlists.
+      # - run:
+      #     name: run script
+      #     command: |
+      #       . venv/bin/activate
+      #       python3 scripts/upload_zoom_recordings.py
 
 workflows:
   version: 2
   commit:
     jobs:
       - build
-  youtube-upload:
-    jobs:
-      - build
-    triggers:
-      - schedule:
-          # Every 30 minutes
-          cron: "0,30 * * * 1-5"
-          filters:
-            branches:
-              only: master
+  # TODO: re-enable this when we have the upload job fixed so it doesn't break
+  # with differently ordered playlists.
+  # youtube-upload:
+  #   jobs:
+  #     - build
+  #   triggers:
+  #     - schedule:
+  #         # Every 30 minutes
+  #         cron: "0,30 * * * 1-5"
+  #         filters:
+  #           branches:
+  #             only: master
