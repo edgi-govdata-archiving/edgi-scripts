@@ -71,8 +71,9 @@ def fix_date(date_string):
 def pretty_date(date_string):
     return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ').strftime('%b %-d, %Y')
 
-def download_file(url, download_path):
-    r = requests.get(url, stream=True)
+def download_file(url, download_path, query=None):
+    r = requests.get(url, params=query, stream=True)
+    r.raise_for_status()
     resolved_url = r.url
     filename = urlparse(resolved_url).path.split('/')[-1]
     filepath = os.path.join(download_path, filename)
@@ -116,7 +117,13 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         for file in videos:
             url = file['download_url']
             print(f'  Download from {url}...')
-            filepath = download_file(url, tmpdirname)
+            # Note the token info in the client isn't really *public*, but it's
+            # not explicitly private, either. Use `config[]` syntax instead of
+            # `config.get()` so we get an exception if things have changed and
+            # this data is no longer available.
+            filepath = download_file(url,
+                                     tmpdirname,
+                                     query={"access_token": client.config["token"]})
             title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
 
             # These characters don't work within Python subprocess commands
