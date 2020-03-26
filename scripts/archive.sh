@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Adapted from: https://gist.github.com/steverobbins/11bac3bc5d3b6156e634d9aaf30978bd
-
+# Save all URLS from a website to Wayback Save Page Now
 URL=$1
 PATH=$2
 EXCLUDE=$3
