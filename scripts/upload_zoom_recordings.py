@@ -31,16 +31,16 @@ import json
 import os
 import re
 import requests
-import playlists
+import lib.playlists
 from subprocess import check_output, CalledProcessError, PIPE
 import sys
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
-from constants import USER_TYPES
+from lib.constants import USER_TYPES
 
 # from youtube_upload import main, playlists
-from basic_youtube_upload import get_youtube_client, initialize_upload
+from lib.basic_youtube_upload import get_youtube_client, initialize_upload
 from types import SimpleNamespace
 
 
