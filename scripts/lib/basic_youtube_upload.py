@@ -16,6 +16,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
+from .constants import PLAYLIST_IDS
 
 # Explicitly tell the underlying HTTP transport library not to retry, since
 # we are handling retry logic ourselves.
@@ -160,9 +161,9 @@ def resumable_upload(request):
             print('Sleeping %f seconds and then retrying...' % sleep_seconds)
             time.sleep(sleep_seconds)
 
-# TODO: Place playlist_id of PUBLIC playlists into constants.py instead of looking up in youtube
-# because that eats some of our quota credits. Probably put playlist_id of unlisted playlists
-# in env variables in CircleCI.
+def get_known_playlist(title):
+    return PLAYLIST_IDS[title]
+
 def get_playlist(youtube, title):
     """Return users's playlist ID by title (None if not found)"""
     playlists = youtube.playlists()
@@ -224,7 +225,8 @@ def add_video_to_existing_playlist(youtube, playlist_id, video_id):
 
 def add_video_to_playlist(youtube, video_id, title, privacy="unlisted"):
     """Add video to playlist (by title) and return the full response."""
-    playlist_id = get_playlist(youtube, title) or \
+    playlist_id = get_known_playlist(title) or \
+        get_playlist(youtube, title) or \
         create_playlist(youtube, title, privacy)
     if playlist_id:
         return add_video_to_existing_playlist(youtube, playlist_id, video_id)

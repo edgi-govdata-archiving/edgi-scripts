@@ -125,7 +125,6 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             chars_to_strip = '<>'
             title = re.sub('['+chars_to_strip+']', '', title)
 
-            print('  Adding to main playlist: Uploads from Zoom')
             video_id = upload_video(youtube,
                               filepath,
                               title=title,
@@ -135,9 +134,10 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                               privacy_status='unlisted')
             
             #Add all videos to default playlist
-            print('  Adding to call playlist: Uploads from Zoom')
+            print('  Adding to main playlist: Uploads from Zoom')
             add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
-
+            
+            #Add to additional playlists
             playlist_name = ''
             if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
                 playlist_name = 'Website Monitoring'
