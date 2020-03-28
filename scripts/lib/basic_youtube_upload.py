@@ -133,11 +133,11 @@ def resumable_upload(request):
     retry = 0
     while response is None:
         try:
-            print('Uploading file...')
+            debug('Uploading file...')
             status, response = request.next_chunk()
             if response is not None:
                 if 'id' in response:
-                    print('Video id "%s" was successfully uploaded.' % response['id'])
+                    debug('Video id "%s" was successfully uploaded.' % response['id'])
                     return response['id']
                 else:
                     raise ValueError('The upload failed with an unexpected response: %s' % response)
@@ -151,14 +151,14 @@ def resumable_upload(request):
             error = 'A retriable error occurred: %s' % e
   
         if error is not None:
-            print(error)
+            debug(error)
             retry += 1
             if retry > MAX_RETRIES:
                 raise ValueError(error)
     
             max_sleep = 2 ** retry
             sleep_seconds = random.random() * max_sleep
-            print('Sleeping %f seconds and then retrying...' % sleep_seconds)
+            debug('Sleeping %f seconds and then retrying...' % sleep_seconds)
             time.sleep(sleep_seconds)
 
 def get_known_playlist(title):
