@@ -90,7 +90,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
     meetings = client.recording.list(host_id=user_id).json()['meetings']
     meetings = sorted(meetings, key=lambda m: m['start_time'])
     # Filter recordings less than 1 minute
-    #meetings = filter(lambda m: m['duration'] > 1, meetings)
+    meetings = filter(lambda m: m['duration'] > 1, meetings)
     for meeting in meetings:
         print(f'Processing meeting: {meeting["topic"]} from {meeting["start_time"]}')
         # 3. filter by criteria (no-op for now)
