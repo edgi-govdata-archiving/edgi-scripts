@@ -18,12 +18,11 @@
 #
 # Configuration:
 #
-#     This script expects two files to be available to enable YouTube upload:
+#     This script expects one file to be available to enable YouTube upload:
 #
-#     * `client_secret.json`
 #     * `.youtube-upload-credentials.json`
 #
-#     See README for how to generate these files.
+#     See README for how to generate this files.
 
 from datetime import datetime
 import functools
@@ -31,19 +30,16 @@ import json
 import os
 import re
 import requests
-import lib.playlists
 from subprocess import check_output, CalledProcessError, PIPE
 import sys
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
-from lib.constants import USER_TYPES
-
-# from youtube_upload import main, playlists
-from lib.basic_youtube_upload import get_youtube_client, initialize_upload
+from lib.constants import USER_TYPES, VIDEO_CATEGORY_IDS
+from lib.basic_youtube_upload import get_youtube_client, upload_video, add_video_to_playlist
 from types import SimpleNamespace
 
-
+YOUTUBE_CREDENTIALS_FILE = '.youtube-upload-credentials.json'
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
 
@@ -54,6 +50,7 @@ MEETINGS_TO_RECORD = ['EDGI Community Standup']
 DEFAULT_YOUTUBE_PLAYLIST = 'Uploads from Zoom'
 DEFAULT_YOUTUBE_CATEGORY = 'Science & Technology'
 DEFAULT_VIDEO_LICENSE = 'creativeCommon'
+DO_FILTER = False
 
 client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET, version=1)
 
@@ -87,15 +84,13 @@ def download_file(url, download_path, query=None):
 
     return filepath
 
-DO_FILTER = False
-
-youtube = get_youtube_client()
+youtube = get_youtube_client(YOUTUBE_CREDENTIALS_FILE)
 with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
     meetings = client.recording.list(host_id=user_id).json()['meetings']
     meetings = sorted(meetings, key=lambda m: m['start_time'])
     # Filter recordings less than 1 minute
-    meetings = filter(lambda m: m['duration'] > 1, meetings)
+    #meetings = filter(lambda m: m['duration'] > 1, meetings)
     for meeting in meetings:
         print(f'Processing meeting: {meeting["topic"]} from {meeting["start_time"]}')
         # 3. filter by criteria (no-op for now)
@@ -131,16 +126,19 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             title = re.sub('['+chars_to_strip+']', '', title)
 
             print('  Adding to main playlist: Uploads from Zoom')
-            video_id = initialize_upload(youtube,
+            video_id = upload_video(youtube,
                               filepath,
                               title=title,
-                              category=28, # TODO: get category by name: DEFAULT_YOUTUBE_CATEGORY,
+                              category=VIDEO_CATEGORY_IDS["Science & Technology"],
                               license=DEFAULT_VIDEO_LICENSE,
                               recording_date=fix_date(meeting['start_time']),
                               privacy_status='unlisted')
             
-            playlist_name = DEFAULT_YOUTUBE_PLAYLIST
+            #Add all videos to default playlist
+            print('  Adding to call playlist: Uploads from Zoom')
+            add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
 
+            playlist_name = ''
             if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
                 playlist_name = 'Website Monitoring'
 
@@ -152,7 +150,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
             if playlist_name:
                 print('  Adding to call playlist: {}'.format(playlist_name))
-                playlists.add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+                add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
             if ZOOM_DELETE_AFTER_UPLOAD:
                 # Just delete the video for now, since that takes the most storage space.

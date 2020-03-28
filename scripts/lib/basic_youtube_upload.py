@@ -6,13 +6,15 @@ import httplib2
 import os
 import random
 import time
+import json
+import locale
+import sys
 
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
-from google_auth_oauthlib.flow import InstalledAppFlow
 
 
 # Explicitly tell the underlying HTTP transport library not to retry, since
@@ -32,18 +34,6 @@ RETRIABLE_EXCEPTIONS = (httplib2.HttpLib2Error, IOError, httplib.NotConnected,
 # codes is raised.
 RETRIABLE_STATUS_CODES = [500, 502, 503, 504]
 
-# The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
-# the OAuth 2.0 information for this application, including its client_id and
-# client_secret. You can acquire an OAuth 2.0 client ID and client secret from
-# the {{ Google Cloud Console }} at
-# {{ https://cloud.google.com/console }}.
-# Please ensure that you have enabled the YouTube Data API for your project.
-# For more information about using OAuth2 to access the YouTube Data API, see:
-#   https://developers.google.com/youtube/v3/guides/authentication
-# For more information about the client_secrets.json file format, see:
-#   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
-CLIENT_SECRETS_FILE = 'client_secret.json'
-YOUTUBE_CREDENTIALS_FILE = '.youtube-upload-credentials.json'
 # This OAuth 2.0 access scope allows an application to upload files to the
 # authenticated user's YouTube channel, but doesn't allow other types of access.
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube.force-ssl']
@@ -52,13 +42,43 @@ API_VERSION = 'v3'
 
 VALID_PRIVACY_STATUSES = ('public', 'private', 'unlisted')
 
+def debug(obj, fd=sys.stderr):
+    """Write obj to standard error."""
+    print(obj, file=fd)
+
+def parse_youtube_http_error(error):
+    """
+    HTTP errors (class `googleapiclient.errors.HttpError`) unfortunately don't
+    make their details available in any useful way (!), so we have to do some
+    parsing here.
+
+    See how the error class handles parsing here:
+    https://github.com/googleapis/google-api-python-client/blob/41144858a766d2a2216af3aaa94c4aa7cd6fbe30/googleapiclient/errors.py#L47-L67
+    
+    Oddly, it doesn't match up with the format of YouTube errors here:
+    https://developers.google.com/youtube/v3/docs/core_errors
+
+    ¯\_(ツ)_/¯
+    """
+    try:
+        data = json.loads(error.content.decode("utf-8"))["error"]
+        # Ensure every error has `domain`, `reason`, `message`, and `code`. (They
+        # should, but just in case...)
+        for error in data["errors"]:
+            error.setdefault("domain", "")
+            error.setdefault("reason", "")
+            error.setdefault("message", "")
+            error.setdefault("code", data["code"])
+        return data
+    except (ValueError, KeyError, TypeError):
+        return None
 
 # Create client from stored authorization credentials.
-def get_youtube_client():
-    credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(YOUTUBE_CREDENTIALS_FILE)
+def get_youtube_client(youtube_credentials):
+    credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(youtube_credentials)
     return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
-def initialize_upload(youtube, file, title='Test Title', description=None,
+def upload_video(youtube, file, title='Test Title', description=None,
                       category=None, tags=None, privacy_status='private',
                       recording_date=None, license=None):
     """
@@ -140,10 +160,73 @@ def resumable_upload(request):
             print('Sleeping %f seconds and then retrying...' % sleep_seconds)
             time.sleep(sleep_seconds)
 
+# TODO: Place playlist_id of PUBLIC playlists into constants.py instead of looking up in youtube
+# because that eats some of our quota credits. Probably put playlist_id of unlisted playlists
+# in env variables in CircleCI.
+def get_playlist(youtube, title):
+    """Return users's playlist ID by title (None if not found)"""
+    playlists = youtube.playlists()
+    request = playlists.list(mine=True, part="id,snippet")
+    current_encoding = locale.getpreferredencoding()
+    
+    while request:
+        results = request.execute()
+        for item in results["items"]:
+            t = item.get("snippet", {}).get("title")
+            existing_playlist_title = (t.encode(current_encoding) if hasattr(t, 'decode') else t)
+            if existing_playlist_title == title:
+                return item.get("id")
+        request = playlists.list_next(request, results)
 
-def upload_video(path, **kwargs):
-    youtube = get_youtube_client()
+def create_playlist(youtube, title, privacy):
+    """Create a playlist by title and return its ID"""
+    debug("Creating playlist: {0}".format(title))
+    response = youtube.playlists().insert(part="snippet,status", body={
+        "snippet": {
+            "title": title,
+        },
+        "status": {
+            "privacyStatus": privacy,
+        }
+    }).execute()
+    return response.get("id")
+
+def add_video_to_existing_playlist(youtube, playlist_id, video_id):
+    """Add video to playlist (by identifier) and return the playlist ID."""
+    debug("Adding video to playlist: {0}".format(playlist_id))
+
+    body = {
+        "snippet": {
+            "playlistId": playlist_id,
+            "position": 0,
+            "resourceId": {
+                "kind": "youtube#video",
+                "videoId": video_id,
+            }
+        }
+    }
+
     try:
-        initialize_upload(youtube, file=path, **kwargs)
-    except HttpError as e:
-        print(f'An HTTP error {e.resp.status} occurred:\n{e.content}')
+        return youtube.playlistItems().insert(part="snippet",
+                                              body=body).execute()
+    except HttpError as error:
+        parsed = parse_youtube_http_error(error)
+        # A "manualSortRequired" error means the playlist is not manually
+        # sorted, and it needs to be in order to use "position". So just try
+        # again without setting "position" this time. (It's dumb, but the API
+        # appears to provide no way to test for this ahead of time.)
+        if parsed and any(error["reason"] == "manualSortRequired" for error in parsed["errors"]):
+            del body["snippet"]["position"]
+            return youtube.playlistItems().insert(part="snippet",
+                                                  body=body).execute()
+        else:
+            raise
+
+def add_video_to_playlist(youtube, video_id, title, privacy="unlisted"):
+    """Add video to playlist (by title) and return the full response."""
+    playlist_id = get_playlist(youtube, title) or \
+        create_playlist(youtube, title, privacy)
+    if playlist_id:
+        return add_video_to_existing_playlist(youtube, playlist_id, video_id)
+    else:
+        debug("Error adding video to playlist")
