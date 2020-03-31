@@ -92,8 +92,8 @@ CircleCI platform][circleci-proj], and click the "Rerun job with SSH"
 button on the latest build page. (You will need to have push access on
 the repo itself.)
 
-* We added our secret environment variables, (`EDGI_ZOOM_API_KEY` and
-  `EDGI_ZOOM_API_SECRET`), to the [CircleCI configuration
+* We added our secret environment variables, (`EDGI_ZOOM_API_KEY`,
+  `EDGI_ZOOM_API_SECRET`, `DEFAULT_YOUTUBE_PLAYLIST`), to the [CircleCI configuration
 file][circleci-config] using the [documented method of encrypting
 secrets][circleci-envvars].
 * Using the [manual encryption method (OpenSSL
@@ -140,6 +140,7 @@ python scripts/auth.py
 # See: https://zoom.us/developer/api/credential
 export EDGI_ZOOM_API_KEY=xxxxxxx
 export EDGI_ZOOM_API_SECRET=xxxxxxxx
+export DEFAULT_YOUTUBE_PLAYLIST=xxxxxxx
 
 # Download from Zoom and upload to YouTube
 python scripts/upload_zoom_recordings.py
