@@ -15,7 +15,7 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
 
 ## Technologies Used
 
-- **Python.** A programming langauge common in scripting.
+- **Python >=3.6.** A programming language common in scripting.
 - [**Click.**][click] A Python library for writing simple command-line
   tools.
 - [**CircleCI.**][circleci] A script-running service that [runs scheduled
@@ -25,7 +25,7 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
 
 Some of these scripts are automatically at regular intervals,
 using CircleCI's "workflow" feature. The schedule is set in the
-[`.circleci/config.yml`][circleci-config1] file within this repo.
+[`.circleci/config.yml`][circleci-config] file within this repo.
 
 ## Script Catalog
 
@@ -94,7 +94,7 @@ the repo itself.)
 
 * We added our secret environment variables, (`EDGI_ZOOM_API_KEY` and
   `EDGI_ZOOM_API_SECRET`), to the [CircleCI configuration
-file][circleci-config1] using the [documented method of encrypting
+file][circleci-config] using the [documented method of encrypting
 secrets][circleci-envvars].
 * Using the [manual encryption method (OpenSSL
   variant)][circleci-encfile], we encrypted the secret Google-related JSON
@@ -102,7 +102,7 @@ files, (`client_secret.json` and `.youtube-upload-credentials.json`). We
 used the above `EDGI_ZOOM_API_SECRET` as the password, since that's a
 secret that CircleCI already knows. We stored the encrypted versions of
 these two JSON files in the repo. We added a line to the [CircleCI
-config][circleci-config2] to decrypt them for use when running in the
+config][circleci-config] to decrypt them for use when running in the
 cloud.
 
 **Setup**
@@ -116,16 +116,16 @@ echo 'source /usr/local/bin/virtualenvwrapper.sh' >> ~/.bashrc
 exec $SHELL
 mkvirtualenv edgi-scripts --python=`which python3`
 ```
+Get Python 3.6. This packages makes use of modern Python features and requires Python 3.6+. If you don't have Python 3.6, we recommend using [conda][conda] to install it. (You don't need admin privileges to install or use it, and it won't interfere with any other installations of Python already on your system.)
 
 **Usage**
 
 ```
-workon edgi-scripts
 pip install -r requirements.txt
 
 # Copy client_secret.json to repo root dir. This is downloaded from
 # Google API Console, and will need to be renamed.
-# See: https://github.com/tokland/youtube-upload#authentication
+# See: https://github.com/tokland/youtube-upload#setup
 
 # Authorize YouTube app with EDGI account.
 # This will need to be done from a system with a windowed browser (ie.
@@ -170,8 +170,8 @@ See the [`LICENSE`](/LICENSE) file for details.
 [click]: http://click.pocoo.org/5/
 [circleci]: https://circleci.com/docs/1.0/introduction/
 [circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
-[circleci-envvars]: https://circleci.com/docs/1.0/environment-variables/#setting-environment-variables-for-all-commands-without-adding-them-to-git
+[circleci-envvars]: https://circleci.com/docs/2.0/env-vars/#notes-on-security
 [circleci-encfile]: https://github.com/circleci/encrypted-files
-[circleci-config1]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
-[circleci-config2]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
+[circleci-config]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
 [circleci-proj]: https://circleci.com/gh/edgi-govdata-archiving/edgi-scripts
+[conda]: https://conda.io/miniconda.html
