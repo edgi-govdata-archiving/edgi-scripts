@@ -16,7 +16,6 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
-from .constants import PLAYLIST_IDS
 
 # Explicitly tell the underlying HTTP transport library not to retry, since
 # we are handling retry logic ourselves.
@@ -79,9 +78,10 @@ def get_youtube_client(youtube_credentials):
     credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(youtube_credentials)
     return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
+
 def upload_video(youtube, file, title='Test Title', description=None,
-                      category=None, tags=None, privacy_status='private',
-                      recording_date=None, license=None):
+                 category=None, tags=None, privacy_status='private',
+                 recording_date=None, license=None):
     """
     Parameters
     ----------
@@ -161,9 +161,6 @@ def resumable_upload(request):
             debug('Sleeping %f seconds and then retrying...' % sleep_seconds)
             time.sleep(sleep_seconds)
 
-def get_known_playlist(title):
-    return PLAYLIST_IDS[title]
-
 def get_playlist(youtube, title):
     """Return users's playlist ID by title (None if not found)"""
     playlists = youtube.playlists()
@@ -225,9 +222,8 @@ def add_video_to_existing_playlist(youtube, playlist_id, video_id):
 
 def add_video_to_playlist(youtube, video_id, title, privacy="unlisted"):
     """Add video to playlist (by title) and return the full response."""
-    playlist_id = get_known_playlist(title) or \
-        get_playlist(youtube, title) or \
-        create_playlist(youtube, title, privacy)
+    playlist_id = (get_playlist(youtube, title) or 
+                   create_playlist(youtube, title, privacy))
     if playlist_id:
         return add_video_to_existing_playlist(youtube, playlist_id, video_id)
     else:

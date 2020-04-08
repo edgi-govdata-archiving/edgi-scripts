@@ -39,12 +39,3 @@ VIDEO_CATEGORY_IDS = {
     'Shows': 43,
     'Trailers': 44,
 }
-
-# 'Uploads from Zoom' is an unlisted playlist, 
-# so it's ID is stored in an environment variable.
-PLAYLIST_IDS = {
-    'Data Together': 'PLtsP3g9LafVul1gCctMYGm9sz5FUWr5bu',
-    'Website Monitoring': 'PLtsP3g9LafVtj6IOMk05aOh-DdpuqWhue',
-    'Community Calls': 'PLtsP3g9LafVsaa18lQaPXzxJU7wIcPB1O',
-    'Uploads from Zoom': os.environ['DEFAULT_YOUTUBE_PLAYLIST']
-}

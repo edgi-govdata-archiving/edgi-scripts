@@ -36,10 +36,10 @@ import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
 from lib.constants import USER_TYPES, VIDEO_CATEGORY_IDS
-from lib.basic_youtube_upload import get_youtube_client, upload_video, add_video_to_playlist
+from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist
 from types import SimpleNamespace
 
-YOUTUBE_CREDENTIALS_FILE = '.youtube-upload-credentials.json'
+YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
 ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
 ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
 
@@ -84,7 +84,7 @@ def download_file(url, download_path, query=None):
 
     return filepath
 
-youtube = get_youtube_client(YOUTUBE_CREDENTIALS_FILE)
+youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
 with tempfile.TemporaryDirectory() as tmpdirname:
     print('Creating tmp dir: ' + tmpdirname)
     meetings = client.recording.list(host_id=user_id).json()['meetings']
