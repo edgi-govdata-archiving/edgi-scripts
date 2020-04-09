@@ -140,7 +140,6 @@ python scripts/auth.py
 # See: https://zoom.us/developer/api/credential
 export EDGI_ZOOM_API_KEY=xxxxxxx
 export EDGI_ZOOM_API_SECRET=xxxxxxxx
-export DEFAULT_YOUTUBE_PLAYLIST=xxxxxxx
 
 # Download from Zoom and upload to YouTube
 python scripts/upload_zoom_recordings.py
