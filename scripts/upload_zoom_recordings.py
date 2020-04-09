@@ -150,14 +150,14 @@ def main():
                     playlist_name = 'Community Calls'
 
                 if playlist_name:
-                    print('  Adding to call playlist: {}'.format(playlist_name))
+                    print(f'  Adding to call playlist: {playlist_name}')
                     add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
                 if ZOOM_DELETE_AFTER_UPLOAD:
                     # Just delete the video for now, since that takes the most storage space.
                     # We should save the chat log transcript in a comment on the video.
                     client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
-                    print("  Deleted {} file from Zoom for recording: {}".format(file['file_type'], meeting['topic']))
+                    print(f"  Deleted {file['file_type']} file from Zoom for recording: {meeting['topic']}")
 
 if __name__ == '__main__':
     main()

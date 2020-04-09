@@ -177,7 +177,7 @@ def find_playlist_id(youtube, title):
 
 def create_playlist(youtube, title, privacy):
     """Create a playlist by title and return its ID"""
-    debug("Creating playlist: {0}".format(title))
+    debug(f"Creating playlist: {title}")
     response = youtube.playlists().insert(part="snippet,status", body={
         "snippet": {
             "title": title,
@@ -190,7 +190,7 @@ def create_playlist(youtube, title, privacy):
 
 def add_video_to_existing_playlist(youtube, playlist_id, video_id):
     """Add video to playlist (by identifier) and return the playlist ID."""
-    debug("Adding video to playlist: {0}".format(playlist_id))
+    debug(f"Adding video to playlist: {playlist_id}")
 
     body = {
         "snippet": {
