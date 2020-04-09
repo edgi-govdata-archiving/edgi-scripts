@@ -161,7 +161,7 @@ def resumable_upload(request):
             debug('Sleeping %f seconds and then retrying...' % sleep_seconds)
             time.sleep(sleep_seconds)
 
-def get_playlist(youtube, title):
+def find_playlist_id(youtube, title):
     """Return users's playlist ID by title (None if not found)"""
     playlists = youtube.playlists()
     request = playlists.list(mine=True, part="id,snippet")
@@ -170,8 +170,7 @@ def get_playlist(youtube, title):
     while request:
         results = request.execute()
         for item in results["items"]:
-            t = item.get("snippet", {}).get("title")
-            existing_playlist_title = (t.encode(current_encoding) if hasattr(t, 'decode') else t)
+            existing_playlist_title = item.get("snippet", {}).get("title")
             if existing_playlist_title == title:
                 return item.get("id")
         request = playlists.list_next(request, results)
@@ -222,7 +221,7 @@ def add_video_to_existing_playlist(youtube, playlist_id, video_id):
 
 def add_video_to_playlist(youtube, video_id, title, privacy="unlisted"):
     """Add video to playlist (by title) and return the full response."""
-    playlist_id = (get_playlist(youtube, title) or 
+    playlist_id = (find_playlist_id(youtube, title) or 
                    create_playlist(youtube, title, privacy))
     if playlist_id:
         return add_video_to_existing_playlist(youtube, playlist_id, video_id)

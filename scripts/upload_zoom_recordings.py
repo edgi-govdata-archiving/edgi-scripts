@@ -84,76 +84,80 @@ def download_file(url, download_path, query=None):
 
     return filepath
 
-youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
-with tempfile.TemporaryDirectory() as tmpdirname:
-    print('Creating tmp dir: ' + tmpdirname)
-    meetings = client.recording.list(host_id=user_id).json()['meetings']
-    meetings = sorted(meetings, key=lambda m: m['start_time'])
-    # Filter recordings less than 1 minute
-    meetings = filter(lambda m: m['duration'] > 1, meetings)
-    for meeting in meetings:
-        print(f'Processing meeting: {meeting["topic"]} from {meeting["start_time"]}')
-        # 3. filter by criteria (no-op for now)
-        if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
-            print('  Skipping...')
-            continue
-        
-        videos = [file for file in meeting['recording_files']
-                  if file['file_type'].lower() == 'mp4']
-        
-        if len(videos) == 0:
-            print(f'  No videos to upload: {meeting["topic"]}')
-            continue
-        elif any((file['file_size'] == 0 for file in videos)):
-            print(f'  Meeting still processing: {meeting["topic"]}')
-            continue
-
-        print('  Recording is permitted for upload!')
-        for file in videos:
-            url = file['download_url']
-            print(f'  Download from {url}...')
-            # Note the token info in the client isn't really *public*, but it's
-            # not explicitly private, either. Use `config[]` syntax instead of
-            # `config.get()` so we get an exception if things have changed and
-            # this data is no longer available.
-            filepath = download_file(url,
-                                     tmpdirname,
-                                     query={"access_token": client.config["token"]})
-            title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
-
-            # These characters don't work within Python subprocess commands
-            chars_to_strip = '<>'
-            title = re.sub('['+chars_to_strip+']', '', title)
-
-            video_id = upload_video(youtube,
-                              filepath,
-                              title=title,
-                              category=VIDEO_CATEGORY_IDS["Science & Technology"],
-                              license=DEFAULT_VIDEO_LICENSE,
-                              recording_date=fix_date(meeting['start_time']),
-                              privacy_status='unlisted')
+def main():
+    youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        print('Creating tmp dir: ' + tmpdirname)
+        meetings = client.recording.list(host_id=user_id).json()['meetings']
+        meetings = sorted(meetings, key=lambda m: m['start_time'])
+        # Filter recordings less than 1 minute
+        # meetings = filter(lambda m: m['duration'] > 1, meetings)
+        for meeting in meetings:
+            print(f'Processing meeting: {meeting["topic"]} from {meeting["start_time"]}')
+            # 3. filter by criteria (no-op for now)
+            if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
+                print('  Skipping...')
+                continue
             
-            #Add all videos to default playlist
-            print('  Adding to main playlist: Uploads from Zoom')
-            add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
+            videos = [file for file in meeting['recording_files']
+                    if file['file_type'].lower() == 'mp4']
             
-            #Add to additional playlists
-            playlist_name = ''
-            if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
-                playlist_name = 'Website Monitoring'
+            if len(videos) == 0:
+                print(f'  No videos to upload: {meeting["topic"]}')
+                continue
+            elif any((file['file_size'] == 0 for file in videos)):
+                print(f'  Meeting still processing: {meeting["topic"]}')
+                continue
 
-            if 'data together' in meeting['topic'].lower():
-                playlist_name = 'Data Together'
+            print('  Recording is permitted for upload!')
+            for file in videos:
+                url = file['download_url']
+                print(f'  Download from {url}...')
+                # Note the token info in the client isn't really *public*, but it's
+                # not explicitly private, either. Use `config[]` syntax instead of
+                # `config.get()` so we get an exception if things have changed and
+                # this data is no longer available.
+                filepath = download_file(url,
+                                        tmpdirname,
+                                        query={"access_token": client.config["token"]})
+                title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
 
-            if 'community call' in meeting['topic'].lower():
-                playlist_name = 'Community Calls'
+                # These characters don't work within Python subprocess commands
+                chars_to_strip = '<>'
+                title = re.sub('['+chars_to_strip+']', '', title)
 
-            if playlist_name:
-                print('  Adding to call playlist: {}'.format(playlist_name))
-                add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+                video_id = upload_video(youtube,
+                                filepath,
+                                title=title,
+                                category=VIDEO_CATEGORY_IDS["Science & Technology"],
+                                license=DEFAULT_VIDEO_LICENSE,
+                                recording_date=fix_date(meeting['start_time']),
+                                privacy_status='unlisted')
+                
+                #Add all videos to default playlist
+                print('  Adding to main playlist: Uploads from Zoom')
+                add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
+                
+                #Add to additional playlists
+                playlist_name = ''
+                if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
+                    playlist_name = 'Website Monitoring'
 
-            if ZOOM_DELETE_AFTER_UPLOAD:
-                # Just delete the video for now, since that takes the most storage space.
-                # We should save the chat log transcript in a comment on the video.
-                client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
-                print("  Deleted {} file from Zoom for recording: {}".format(file['file_type'], meeting['topic']))
+                if 'data together' in meeting['topic'].lower():
+                    playlist_name = 'Data Together'
+
+                if 'community call' in meeting['topic'].lower():
+                    playlist_name = 'Community Calls'
+
+                if playlist_name:
+                    print('  Adding to call playlist: {}'.format(playlist_name))
+                    add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
+                if ZOOM_DELETE_AFTER_UPLOAD:
+                    # Just delete the video for now, since that takes the most storage space.
+                    # We should save the chat log transcript in a comment on the video.
+                    client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
+                    print("  Deleted {} file from Zoom for recording: {}".format(file['file_type'], meeting['topic']))
+
+if __name__ == '__main__':
+    main()
