@@ -74,8 +74,8 @@ def parse_youtube_http_error(error):
         return None
 
 # Create client from stored authorization credentials.
-def get_youtube_client(youtube_credentials):
-    credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(youtube_credentials)
+def get_youtube_client(credentials_path):
+    credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(credentials_path)
     return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
 
