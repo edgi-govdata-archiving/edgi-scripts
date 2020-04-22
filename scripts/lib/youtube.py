@@ -161,6 +161,12 @@ def resumable_upload(request):
             debug('Sleeping %f seconds and then retrying...' % sleep_seconds)
             time.sleep(sleep_seconds)
 
+
+# Portions of the playlist code came from:
+# Author: https://github.com/tokland
+# Source: https://github.com/tokland/youtube-upload/blob/master/youtube_upload/playlists.py
+# License: GNU/GPLv3
+
 def find_playlist_id(youtube, title):
     """Return users's playlist ID by title (None if not found)"""
     playlists = youtube.playlists()
@@ -227,3 +233,4 @@ def add_video_to_playlist(youtube, video_id, title, privacy="unlisted"):
         return add_video_to_existing_playlist(youtube, playlist_id, video_id)
     else:
         debug("Error adding video to playlist")
+        
