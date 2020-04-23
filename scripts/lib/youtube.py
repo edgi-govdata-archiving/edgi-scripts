@@ -12,8 +12,8 @@ import sys
 
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build, build_from_document
+from googleapiclient.errors import HttpError, UnknownApiNameOrVersion
 from googleapiclient.http import MediaFileUpload
 
 
@@ -76,7 +76,18 @@ def parse_youtube_http_error(error):
 # Create client from stored authorization credentials.
 def get_youtube_client(credentials_path):
     credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(credentials_path)
-    return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
+    try: 
+        return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
+    except UnknownApiNameOrVersion:
+        pass
+    try: 
+        json_path = 'youtube-api-rest.json'
+        with open(path_json) as f:
+            service = json.load(f)
+        
+        return build_from_document(service, credentials = credentials)
+    except:
+        raise
 
 
 def upload_video(youtube, file, title='Test Title', description=None,
