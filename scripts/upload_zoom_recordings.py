@@ -52,7 +52,7 @@ DEFAULT_YOUTUBE_CATEGORY = 'Science & Technology'
 DEFAULT_VIDEO_LICENSE = 'creativeCommon'
 DO_FILTER = False
 
-client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET, version=1)
+client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
 
 # Get main account, which should be 'pro'
 pro_users = [user for user in client.user.list().json()['users'] if user['type'] >= USER_TYPES['pro'] ]
@@ -88,7 +88,7 @@ def main():
     youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
     with tempfile.TemporaryDirectory() as tmpdirname:
         print('Creating tmp dir: ' + tmpdirname)
-        meetings = client.recording.list(host_id=user_id).json()['meetings']
+        meetings = client.recording.list(user_id=user_id).json()['meetings']
         meetings = sorted(meetings, key=lambda m: m['start_time'])
         # Filter recordings less than 1 minute
         meetings = filter(lambda m: m['duration'] > 1, meetings)
@@ -134,11 +134,11 @@ def main():
                                 recording_date=fix_date(meeting['start_time']),
                                 privacy_status='unlisted')
                 
-                #Add all videos to default playlist
+                # Add all videos to default playlist
                 print('  Adding to main playlist: Uploads from Zoom')
                 add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
                 
-                #Add to additional playlists
+                # Add to additional playlists
                 playlist_name = ''
                 if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
                     playlist_name = 'Website Monitoring'
@@ -156,8 +156,19 @@ def main():
                 if ZOOM_DELETE_AFTER_UPLOAD:
                     # Just delete the video for now, since that takes the most storage space.
                     # We should save the chat log transcript in a comment on the video.
-                    client.recording.delete(meeting_id=file['meeting_id'], file_id=file['id'])
-                    print(f"  Deleted {file['file_type']} file from Zoom for recording: {meeting['topic']}")
+                    
+                    # We're using the zoom api directly instead of zoomus, because zoomus only implements
+                    # deleting all recorded files related to the meeting using the v2 API, 
+                    # while we still want to retain the audio and chat files for backup.
+                    url = f'https://api.zoom.us/v2/meetings/{file["meeting_id"]}/recordings/{file["id"]}'
+                    querystring = {"action":"trash"}
+                    headers = {'authorization': f'Bearer {client.config["token"]}'}
+                    resp = requests.request("DELETE", url, headers=headers, params=querystring)
+                    if resp.status_code == 204:
+                        print(f'  Deleted {file["file_type"]} file from Zoom for recording: {meeting["topic"]}')
+                    else:
+                        print(f'  The file could not be deleted. We received this response: {resp.status_code}')
+                    
 
 if __name__ == '__main__':
     main()
