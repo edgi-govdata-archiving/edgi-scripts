@@ -167,7 +167,7 @@ def main():
                     if resp.status_code == 204:
                         print(f'  Deleted {file["file_type"]} file from Zoom for recording: {meeting["topic"]}')
                     else:
-                        print(f'  The file could not be deleted. We received this response: {resp.status_code}')
+                        print(f'  The file could not be deleted. We received this response: {resp.status_code}. Please check https://marketplace.zoom.us/docs/api-reference/zoom-api/cloud-recording/recordingdeleteone for what that could mean.')
                     
 
 if __name__ == '__main__':
