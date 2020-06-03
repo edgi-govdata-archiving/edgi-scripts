@@ -163,11 +163,11 @@ def main():
                     url = f'https://api.zoom.us/v2/meetings/{file["meeting_id"]}/recordings/{file["id"]}'
                     querystring = {"action":"trash"}
                     headers = {'authorization': f'Bearer {client.config["token"]}'}
-                    resp = requests.request("DELETE", url, headers=headers, params=querystring)
-                    if resp.status_code == 204:
+                    response = requests.request("DELETE", url, headers=headers, params=querystring)
+                    if response.status_code == 204:
                         print(f'  Deleted {file["file_type"]} file from Zoom for recording: {meeting["topic"]}')
                     else:
-                        print(f'  The file could not be deleted. We received this response: {resp.status_code}. Please check https://marketplace.zoom.us/docs/api-reference/zoom-api/cloud-recording/recordingdeleteone for what that could mean.')
+                        print(f'  The file could not be deleted. We received this response: {response.status_code}. Please check https://marketplace.zoom.us/docs/api-reference/zoom-api/cloud-recording/recordingdeleteone for what that could mean.')
                     
 
 if __name__ == '__main__':
