@@ -38,12 +38,11 @@ jobs:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
       
-      # TODO - reenable
-      # - run:
-      #     name: run script
-      #     command: |
-      #       . venv/bin/activate
-      #       python3 scripts/upload_zoom_recordings.py
+      - run:
+          name: run script
+          command: |
+            . venv/bin/activate
+            python3 scripts/upload_zoom_recordings.py
 
 workflows:
   version: 2
