@@ -148,6 +148,9 @@ def main():
 
                 if 'community call' in meeting['topic'].lower():
                     playlist_name = 'Community Calls'
+                
+                if 'edgi introductions' in meeting['topic'].lower():
+                    playlist_name = 'EDGI Introductions'
 
                 if playlist_name:
                     print(f'  Adding to call playlist: {playlist_name}')
