@@ -152,6 +152,9 @@ def main():
                 if 'edgi introductions' in meeting['topic'].lower():
                     playlist_name = 'EDGI Introductions'
 
+                if 'All-EDGI' in meeting['topic'].lower():
+                    playlist_name = 'All-EDGI meetings'
+
                 if playlist_name:
                     print(f'  Adding to call playlist: {playlist_name}')
                     add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
