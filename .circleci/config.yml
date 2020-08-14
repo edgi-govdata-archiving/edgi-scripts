@@ -10,9 +10,9 @@ jobs:
       - checkout
 
       - run:
-          name: skip destructive action on non-master
+          name: skip destructive action on non-main
           command: |
-            echo '[[ "master" != "$CIRCLE_BRANCH" ]] && unset EDGI_ZOOM_DELETE_AFTER_UPLOAD' >> $BASH_ENV
+            echo '[[ "main" != "$CIRCLE_BRANCH" ]] && unset EDGI_ZOOM_DELETE_AFTER_UPLOAD' >> $BASH_ENV
 
       - run:
           name: decrypt files
@@ -58,4 +58,4 @@ workflows:
           cron: "0,30 * * * 1-5"
           filters:
             branches:
-              only: master
+              only: main
