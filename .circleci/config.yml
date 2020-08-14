@@ -1,0 +1,61 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.2
+    environment:
+      - EDGI_ZOOM_DELETE_AFTER_UPLOAD: '1'
+    steps:
+      - checkout
+
+      - run:
+          name: skip destructive action on non-main
+          command: |
+            echo '[[ "main" != "$CIRCLE_BRANCH" ]] && unset EDGI_ZOOM_DELETE_AFTER_UPLOAD' >> $BASH_ENV
+
+      - run:
+          name: decrypt files
+          command: |
+            openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d -md sha256
+            openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d -md sha256
+
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            # When fetching package from new git repo, use (w)ipe action
+            pip install -r requirements.txt --exists-action w
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+      
+      - run:
+          name: run script
+          command: |
+            . venv/bin/activate
+            python3 scripts/upload_zoom_recordings.py
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build
+  youtube-upload:
+    jobs:
+      - build
+    triggers:
+      - schedule:
+          # Every 30 minutes
+          cron: "0,30 * * * 1-5"
+          filters:
+            branches:
+              only: main
