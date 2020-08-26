@@ -1,6 +1,6 @@
 # EDGI Scripts
 
-[![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](https://github.com/edgi-govdata-archiving/overview/blob/master/CONDUCT.md) [![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
+[![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](https://github.com/edgi-govdata-archiving/overview/blob/main/CONDUCT.md) [![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
 [![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
 
 Helper scripts for EDGI's digital infrastructure.
@@ -148,7 +148,7 @@ python scripts/upload_zoom_recordings.py
 # Contributing Guidelines
 
 We love improvements to our tools! EDGI has general [guidelines for
-contributing](https://github.com/edgi-govdata-archiving/overview/blob/master/CONTRIBUTING.md)
+contributing](https://github.com/edgi-govdata-archiving/overview/blob/main/CONTRIBUTING.md)
 to all of our organizational repos.
 
 For repo-specific details, see our [`CONTRIBUTING.md`](CONTRIBUTING.md).
@@ -172,6 +172,6 @@ See the [`LICENSE`](/LICENSE) file for details.
 [circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
 [circleci-envvars]: https://circleci.com/docs/2.0/env-vars/#notes-on-security
 [circleci-encfile]: https://github.com/circleci/encrypted-files
-[circleci-config]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/master/.circleci/config.yml
+[circleci-config]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/main/.circleci/config.yml
 [circleci-proj]: https://circleci.com/gh/edgi-govdata-archiving/edgi-scripts
 [conda]: https://conda.io/miniconda.html
