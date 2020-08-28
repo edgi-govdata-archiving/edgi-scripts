@@ -153,7 +153,7 @@ def main():
                     playlist_name = 'EDGI Introductions'
 
                 if 'All-EDGI' in meeting['topic'].lower():
-                    playlist_name = 'All-EDGI meetings'
+                    playlist_name = 'All-EDGI Meetings'
 
                 if playlist_name:
                     print(f'  Adding to call playlist: {playlist_name}')
