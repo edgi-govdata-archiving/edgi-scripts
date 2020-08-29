@@ -152,7 +152,7 @@ def main():
                 if 'edgi introductions' in meeting['topic'].lower():
                     playlist_name = 'EDGI Introductions'
 
-                if 'All-EDGI' in meeting['topic'].lower():
+                if 'all-edgi' in meeting['topic'].lower():
                     playlist_name = 'All-EDGI Meetings'
 
                 if playlist_name:
