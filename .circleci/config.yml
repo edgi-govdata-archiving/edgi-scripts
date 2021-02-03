@@ -38,11 +38,18 @@ jobs:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
       
-      - run:
-          name: run script
-          command: |
-            . venv/bin/activate
-            python3 scripts/upload_zoom_recordings.py
+      # TODO: re-enable when we add docker credentials
+      # Error: https://app.circleci.com/pipelines/github/edgi-govdata-archiving/edgi-scripts/8812/workflows/9b3647a4-4fb7-4d43-83f7-ac48f3097099/jobs/46128
+      # ```
+      #  Warning: No authentication provided, using CircleCI credentials for pulls from Docker Hub. image cache not found on this host, downloading circleci/python:3.6.2
+      # unauthorized: authentication required
+      # ```
+      # Possible solution: https://circleci.com/docs/2.0/private-images/
+      # - run:
+      #     name: run script
+      #     command: |
+      #       . venv/bin/activate
+      #       python3 scripts/upload_zoom_recordings.py
 
 workflows:
   version: 2
