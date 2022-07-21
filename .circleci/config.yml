@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.6.2
+      - image: cimg/python:3.10
     environment:
       - EDGI_ZOOM_DELETE_AFTER_UPLOAD: '1'
     steps:

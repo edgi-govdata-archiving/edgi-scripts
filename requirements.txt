@@ -1,5 +1,5 @@
 requests
-git+git://github.com/lightandluck/zoomus.git
+git+https://github.com/lightandluck/zoomus.git
 click
 oauth2client
 google-api-python-client ~=1.7.11
