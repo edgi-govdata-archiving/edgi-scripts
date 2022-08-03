@@ -43,5 +43,4 @@ jobs:
           EDGI_ZOOM_API_SECRET: ${{ secrets.EDGI_ZOOM_API_SECRET }}
           DEFAULT_YOUTUBE_PLAYLIST: ${{ secrets.DEFAULT_YOUTUBE_PLAYLIST }}
         run: |
-          echo "Delete after upload? ${EDGI_ZOOM_DELETE_AFTER_UPLOAD}"
-          # python3 scripts/upload_zoom_recordings.py
+          python3 scripts/upload_zoom_recordings.py
