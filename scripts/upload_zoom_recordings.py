@@ -11,8 +11,9 @@
 #
 # Environment Variables:
 #
-#     EDGI_ZOOM_API_KEY - See https://developer.zoom.us/me/ (required)
-#     EDGI_ZOOM_API_SECRET - See https://developer.zoom.us/me/ (required)
+#     EDGI_ZOOM_CLIENT_ID - Client ID for the Zoom OAuth app for this script
+#     ZOOM_CLIENT_SECRET - Client Secret for the Zoom OAuth app for this script
+#     ZOOM_ACCOUNT_ID - Account ID for the Zoom OAuth app for this script
 #     EDGI_ZOOM_DELETE_AFTER_UPLOAD - If set to 'true', cloud recording will be
 #         deleted after upload to YouTube.
 #
@@ -40,8 +41,9 @@ from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist
 from types import SimpleNamespace
 
 YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
-ZOOM_API_KEY = os.environ['EDGI_ZOOM_API_KEY']
-ZOOM_API_SECRET = os.environ['EDGI_ZOOM_API_SECRET']
+ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
+ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
+ZOOM_ACCOUNT_ID = os.environ['EDGI_ZOOM_ACCOUNT_ID']
 
 def is_truthy(x): return x.lower() in ['true', '1', 'y', 'yes']
 ZOOM_DELETE_AFTER_UPLOAD = is_truthy(os.environ.get('EDGI_ZOOM_DELETE_AFTER_UPLOAD', ''))
@@ -52,7 +54,7 @@ DEFAULT_YOUTUBE_CATEGORY = 'Science & Technology'
 DEFAULT_VIDEO_LICENSE = 'creativeCommon'
 DO_FILTER = False
 
-client = ZoomClient(ZOOM_API_KEY, ZOOM_API_SECRET)
+client = ZoomClient(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, ZOOM_ACCOUNT_ID)
 
 # Get main account, which should be 'pro'
 pro_users = [user for user in client.user.list().json()['users'] if user['type'] >= USER_TYPES['pro'] ]
