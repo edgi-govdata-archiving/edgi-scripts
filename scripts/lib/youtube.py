@@ -11,7 +11,6 @@ import locale
 import sys
 
 import google.oauth2.credentials
-import google_auth_oauthlib.flow
 from googleapiclient.discovery import build, build_from_document
 from googleapiclient.errors import HttpError, UnknownApiNameOrVersion
 from googleapiclient.http import MediaFileUpload
@@ -116,7 +115,7 @@ def upload_video(youtube, file, title='Test Title', description=None,
     if license:
         body['status']['license'] = license
 
-  # Call the API's videos.insert method to create and upload the video.
+    # Call the API's videos.insert method to create and upload the video.
     insert_request = youtube.videos().insert(
         part=','.join(body.keys()),
         body=body,

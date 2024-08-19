@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
     environment:
       - EDGI_ZOOM_DELETE_AFTER_UPLOAD: '1'
     steps:
