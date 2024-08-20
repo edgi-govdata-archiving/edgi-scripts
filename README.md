@@ -15,7 +15,7 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
 
 ## Technologies Used
 
-- **Python >=3.6.** A programming language common in scripting.
+- **Python >=3.8.** A programming language common in scripting.
 - [**Click.**][click] A Python library for writing simple command-line
   tools.
 - [**CircleCI.**][circleci] A script-running service that [runs scheduled
@@ -23,7 +23,7 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
   
 ## About these Automated Scripts
 
-Some of these scripts are automatically at regular intervals,
+Some of these scripts are run automatically at regular intervals,
 using CircleCI's "workflow" feature. The schedule is set in the
 [`.circleci/config.yml`][circleci-config] file within this repo.
 
@@ -73,13 +73,12 @@ seconds in duration and:
 * sets video license to "Creative Commons - Attribution"
 * sets video category to "Science & Technology"
 * adds video to a default unlisted playlist, "Uploads from Zoom"
-* adds video to call-specific playlist based on meeting title:
-  * "Website Monitoring" (alternatively, "Web Mon" or "WM")
-  * "Data Together"
-  * "Community Call"
+* adds video to a call-specific playlist based on meeting title and top (if
+    there is a relevant playlist). You can see the playlists in
+    [`upload_zoom_recordings.py`](./scripts/upload_zoom_recordings.py).
 * **deletes** original video file from Zoom (**not** audio or chat log)
 
-This script is run every 30 minutes.
+This script is run every hour.
 
 Note: the script isn't smart enough to detect duplicate videos being
 uploaded more than once, but YouTube will recognize and disable them
@@ -88,62 +87,118 @@ after upload
 #### Usage via CircleCI
 
 **For forcing a cloud run on-demand:** Visit [our project page on the
-CircleCI platform][circleci-proj], and click the "Rerun job with SSH"
-button on the latest build page. (You will need to have push access on
-the repo itself.)
+CircleCI platform][circleci-proj], select the `main` branch from the dropdowns
+near the top of the page, and click the "Trigger Pipeline" button. (You will
+need to have push access on the repo itself.)
 
-* We added our secret environment variables, (`EDGI_ZOOM_API_KEY`,
-  `EDGI_ZOOM_API_SECRET`), to the [CircleCI configuration
-file][circleci-config] using the [documented method of encrypting
-secrets][circleci-envvars].
-* Using the [manual encryption method (OpenSSL
-  variant)][circleci-encfile], we encrypted the secret Google-related JSON
-files, (`client_secret.json` and `.youtube-upload-credentials.json`). We
-used the above `EDGI_ZOOM_API_SECRET` as the password, since that's a
-secret that CircleCI already knows. We stored the encrypted versions of
-these two JSON files in the repo. We added a line to the [CircleCI
-config][circleci-config] to decrypt them for use when running in the
-cloud.
+#### Local Usage
 
-**Setup**
+##### Setup
 
 Quick reference for Ubuntu (may vary).
 
-```
+```sh
 apt-get install python python-pip
-pip install virtualenvwrapper
-echo 'source /usr/local/bin/virtualenvwrapper.sh' >> ~/.bashrc
-exec $SHELL
-mkvirtualenv edgi-scripts --python=`which python3`
+python -m venv .venv-edgi-scripts
+# To activate the virtualenv:
+source .venv-edgi-scripts/bin/activate
 ```
-Get Python 3.6. This packages makes use of modern Python features and requires Python 3.6+. If you don't have Python 3.6, we recommend using [conda][conda] to install it. (You don't need admin privileges to install or use it, and it won't interfere with any other installations of Python already on your system.)
 
-**Usage**
+Get Python 3.8. This packages makes use of modern Python features and requires Python 3.8+. If you don't have Python 3.8, we recommend using [conda][conda] to install it. (You don't need admin privileges to install or use it, and it won't interfere with any other installations of Python already on your system.)
 
-```
+##### Usage
+
+```sh
 pip install -r requirements.txt
 
-# Copy client_secret.json to repo root dir. This is downloaded from
-# Google API Console, and will need to be renamed.
+# Copy `.env.sample` to `.env` for you own local use, then manually fill in the
+# values.
+cp .env.sample .env
+vim .env
+
+# Load the secrets from `.env` into your current environment.
+source .env
+
+# To use the existing EDGI youtube-uploader app, decrypt its secrets:
+openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d -md sha256
+# ALTERNATIVELY, to use a new set of Google Cloud app credentials, copy your new
+# `client_secret.json` to the repo root directory. You can download it from the
+# Google API Console. See:
 # See: https://github.com/tokland/youtube-upload#setup
 
-# Authorize YouTube app with EDGI account.
-# This will need to be done from a system with a windowed browser (ie.
-# not a server). It will generate a file named
-# `.youtube-upload-credentials.json` in the repo root dir. If running the
-# script on a server is required, you will 
-# need to transfer this file
-# from your workstation onto the server.
+# Authorize the script to use EDGI's YouTube account.
+# This needs to be done from a system with a windowed browser (i.e. not a
+# server). It will generate a file named `.youtube-upload-credentials.json` in
+# the repo root dir. If running the script on a server is required, you will 
+# need to transfer this file from your workstation onto the server.
 python scripts/auth.py
-
-# Prepare to download all videos from Zoom
-# See: https://zoom.us/developer/api/credential
-export EDGI_ZOOM_API_KEY=xxxxxxx
-export EDGI_ZOOM_API_SECRET=xxxxxxxx
 
 # Download from Zoom and upload to YouTube
 python scripts/upload_zoom_recordings.py
 ```
+
+#### Authorization
+
+This script needs authorized access to EDGI’s Zoom account and YouTube account
+in order to do its work.
+
+##### Zoom
+
+To access the Zoom API, you have to create a Zoom *app*. Ours is not published,
+so it can only be used in EDGI’s Zoom account. For the scripts to access Zoom
+through the app, they require 3 values that are stored in environment variables:
+
+1. `EDGI_ZOOM_ACCOUNT_ID`
+2. `EDGI_ZOOM_CLIENT_ID`
+3. `EDGI_ZOOM_CLIENT_SECRET`
+
+You can find the appropriate value’s on the app’s “App Credentials” page. You
+can get to that by going to the [App Marketplace](https://marketplace.zoom.us),
+clicking on “manage” in the top right, and clicking on the app in the list of
+“created apps.”
+
+##### YouTube
+
+YouTube authorization is slightly more complicated. We have a Google Cloud *app*
+that represents our script. Our YouTube account must then authorize that app to
+act on its behalf to upload videos. That authorization periodically expires and
+needs to be manually recreated.
+
+The basic credentials for the app are stored (encrypted) in
+`client_secret.json.enc`. The *authorization* for the app to work in YouTube is
+stored (encrypted) in `.youtube-upload-credentials.json.enc`. When the
+`upload_zoom_recordings.py` script runs, it simply uses the authorization file.
+If the authorization is expired, you can generate a new one from the app’s
+credentials (in `client_secret.json.enc`) using the `auth.py` script:
+
+1. Decrypt the `client_secret.json.enc` file:
+
+    ```sh
+    # Ensure you have `EDGI_ZOOM_API_SECRET` set to the decryption key.
+    openssl aes-256-cbc -d -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -md sha256
+    ```
+
+2. Run the authorization script. It will open a browser window to a YouTube login page, where you should log into EDGI’s YouTube account. Then it will ask you to authorize the app. Afterward, you can close the window.
+
+    ```sh
+    python scripts/auth.py
+    ```
+
+    The script should have created a file named `.youtube-upload-credentials.json`.
+
+3. Encrypt the authorization:
+
+    ```sh
+    openssl aes-256-cbc -e -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json -out .youtube-upload-credentials.json.enc
+    ```
+
+4. Commit the new authorization to git for later use!
+
+    ```sh
+    git add .youtube-upload-credentials.json.enc
+    git commit
+    git push
+    ```
 
 # Contributing Guidelines
 
@@ -168,10 +223,10 @@ See the [`LICENSE`](/LICENSE) file for details.
 
 <!-- Links -->
 [click]: http://click.pocoo.org/5/
-[circleci]: https://circleci.com/docs/1.0/introduction/
-[circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
+[circleci]: https://circleci.com/docs/about-circleci/
+[circleci-cron]: https://circleci.com/docs/workflows/#scheduling-a-workflow
 [circleci-envvars]: https://circleci.com/docs/2.0/env-vars/#notes-on-security
 [circleci-encfile]: https://github.com/circleci/encrypted-files
 [circleci-config]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/main/.circleci/config.yml
-[circleci-proj]: https://circleci.com/gh/edgi-govdata-archiving/edgi-scripts
+[circleci-proj]: https://app.circleci.com/pipelines/github/edgi-govdata-archiving/edgi-scripts
 [conda]: https://conda.io/miniconda.html
