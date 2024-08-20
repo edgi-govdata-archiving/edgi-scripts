@@ -37,7 +37,7 @@ import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
 from lib.constants import USER_TYPES, VIDEO_CATEGORY_IDS
-from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist
+from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 from types import SimpleNamespace
 
 YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
@@ -88,6 +88,11 @@ def download_file(url, download_path, query=None):
 
 def main():
     youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
+    if not validate_youtube_credentials(youtube):
+        print(f'The credentials in {YOUTUBE_CREDENTIALS_PATH} were not valid!')
+        print('Please use `python scripts/auth.py` to re-authorize.')
+        return sys.exit(1)
+
     with tempfile.TemporaryDirectory() as tmpdirname:
         print('Creating tmp dir: ' + tmpdirname)
         meetings = client.recording.list(user_id=user_id).json()['meetings']

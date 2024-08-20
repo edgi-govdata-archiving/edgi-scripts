@@ -14,6 +14,7 @@ import google.oauth2.credentials
 from googleapiclient.discovery import build, build_from_document
 from googleapiclient.errors import HttpError, UnknownApiNameOrVersion
 from googleapiclient.http import MediaFileUpload
+from google.auth.exceptions import GoogleAuthError
 
 
 # Explicitly tell the underlying HTTP transport library not to retry, since
@@ -56,8 +57,6 @@ def parse_youtube_http_error(error):
     
     Oddly, it doesn't match up with the format of YouTube errors here:
     https://developers.google.com/youtube/v3/docs/core_errors
-
-    ¯\_(ツ)_/¯
     """
     try:
         data = json.loads(error.content.decode("utf-8"))["error"]
@@ -87,6 +86,19 @@ def get_youtube_client(credentials_path):
         return build_from_document(service, credentials = credentials)
     except:
         raise
+
+
+def validate_youtube_credentials(youtube) -> bool:
+    """
+    Make a basic API request to validate the given credentials work. Returns a
+    boolean indicating whether credentials are valid.
+    """
+    try:
+        request = youtube.playlists().list(part='id,contentDetails', mine=True)
+        request.execute()
+        return True
+    except GoogleAuthError:
+        return False
 
 
 def upload_video(youtube, file, title='Test Title', description=None,
