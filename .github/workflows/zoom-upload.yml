@@ -1,0 +1,51 @@
+name: Upload Zoom Recordings to YouTube
+
+on:
+  schedule:
+    # 10 minutes after every hour before noon on weekdays
+    # TODO: when we are ready to switch off Circle, run every hour instead of
+    # just in the morning.
+    - cron: "10 0-12 * * 1-5"
+
+  workflow_dispatch:
+    inputs:
+      delete_after_upload:
+        description: 'Delete recordings from Zoom after uploading to YouTube'
+        type: boolean
+        default: true
+
+  pull_request: {}
+
+jobs:
+  zoom_to_youtube:
+    name: Upload Zoom to YouTube
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Decrypt Credential Files
+        env:
+          EDGI_ZOOM_API_SECRET: ${{ secrets.EDGI_ZOOM_API_SECRET }}
+        run: |
+          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d -md sha256
+          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d -md sha256
+
+      - name: Upload
+        env:
+          EDGI_ZOOM_DELETE_AFTER_UPLOAD: ${{ github.event_name == 'schedule' || inputs.delete_after_upload }}
+          DEFAULT_YOUTUBE_PLAYLIST: ${{ secrets.DEFAULT_YOUTUBE_PLAYLIST }}
+          EDGI_ZOOM_ACCOUNT_ID: ${{ secrets.EDGI_ZOOM_ACCOUNT_ID }}
+          EDGI_ZOOM_CLIENT_ID: ${{ secrets.EDGI_ZOOM_CLIENT_ID }}
+          EDGI_ZOOM_CLIENT_SECRET: ${{ secrets.EDGI_ZOOM_CLIENT_SECRET }}
+        run: |
+          python3 scripts/upload_zoom_recordings.py

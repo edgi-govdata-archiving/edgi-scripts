@@ -55,8 +55,10 @@ workflows:
       - build
     triggers:
       - schedule:
-          # Every hour at :10
-          cron: "10 * * * 1-5"
+          # Every hour in the afternoon at :10 on weekdays
+          # (This is only in the afternoon so we can compare how this is doing
+          # vs. how GitHub Actions is doing and then maybe turn off Circle.)
+          cron: "10 13-23 * * 1-5"
           filters:
             branches:
               only: main
