@@ -7,9 +7,13 @@ on:
     # just in the morning.
     - cron: "10 0-12 * * 1-5"
 
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      delete_after_upload:
+        description: 'Delete recordings from Zoom after uploading to YouTube'
+        type: boolean
+        default: true
 
-  # XXX: This is for testing; do not merge
   pull_request: {}
 
 jobs:
@@ -18,12 +22,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
           cache: 'pip'
 
       - name: Install Dependencies
@@ -38,9 +42,10 @@ jobs:
 
       - name: Upload
         env:
-          EDGI_ZOOM_DELETE_AFTER_UPLOAD: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
-          EDGI_ZOOM_API_KEY: ${{ secrets.EDGI_ZOOM_API_KEY }}
-          EDGI_ZOOM_API_SECRET: ${{ secrets.EDGI_ZOOM_API_SECRET }}
+          EDGI_ZOOM_DELETE_AFTER_UPLOAD: ${{ github.event_name == 'schedule' || inputs.delete_after_upload }}
           DEFAULT_YOUTUBE_PLAYLIST: ${{ secrets.DEFAULT_YOUTUBE_PLAYLIST }}
+          EDGI_ZOOM_ACCOUNT_ID: ${{ secrets.EDGI_ZOOM_ACCOUNT_ID }}
+          EDGI_ZOOM_CLIENT_ID: ${{ secrets.EDGI_ZOOM_CLIENT_ID }}
+          EDGI_ZOOM_CLIENT_SECRET: ${{ secrets.EDGI_ZOOM_CLIENT_SECRET }}
         run: |
           python3 scripts/upload_zoom_recordings.py
