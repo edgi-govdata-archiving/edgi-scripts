@@ -26,19 +26,15 @@
 #     See README for how to generate this files.
 
 from datetime import datetime
-import functools
-import json
 import os
 import re
 import requests
-from subprocess import check_output, CalledProcessError, PIPE
 import sys
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
 from lib.constants import USER_TYPES, VIDEO_CATEGORY_IDS
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
-from types import SimpleNamespace
 
 YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
@@ -134,8 +130,6 @@ def main():
 
                 recording_date = fix_date(meeting['start_time'])
                 title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
-                # These characters don't work within Python subprocess commands
-                title = re.sub(r'[<>]', '', title)
 
                 print(f'  Uploading {filepath}\n    {title=}\n    {recording_date=}')
                 if not DRY_RUN:
