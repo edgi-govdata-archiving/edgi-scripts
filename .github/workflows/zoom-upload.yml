@@ -13,6 +13,10 @@ on:
         description: 'Delete recordings from Zoom after uploading to YouTube'
         type: boolean
         default: true
+      dry_run:
+        description: 'Dry run: report planned work, but do not actually upload or change anything'
+        type: boolean
+        default: false
 
   pull_request: {}
 
@@ -32,7 +36,7 @@ jobs:
 
       - name: Install Dependencies
         run: pip install -r requirements.txt
-      
+
       - name: Decrypt Credential Files
         env:
           EDGI_ZOOM_API_SECRET: ${{ secrets.EDGI_ZOOM_API_SECRET }}
@@ -43,6 +47,7 @@ jobs:
       - name: Upload
         env:
           EDGI_ZOOM_DELETE_AFTER_UPLOAD: ${{ github.event_name == 'schedule' || inputs.delete_after_upload }}
+          EDGI_DRY_RUN: ${{ github.event_name == 'pull_request' || inputs.dry_run }}
           DEFAULT_YOUTUBE_PLAYLIST: ${{ secrets.DEFAULT_YOUTUBE_PLAYLIST }}
           EDGI_ZOOM_ACCOUNT_ID: ${{ secrets.EDGI_ZOOM_ACCOUNT_ID }}
           EDGI_ZOOM_CLIENT_ID: ${{ secrets.EDGI_ZOOM_CLIENT_ID }}

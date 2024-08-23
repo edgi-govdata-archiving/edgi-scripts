@@ -1,12 +1,4 @@
-from __future__ import print_function
-import httplib2
-import os
-import sys
-
-from apiclient import discovery
-from oauth2client import client
-from oauth2client import tools
-from oauth2client.file import Storage
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 # If modifying these scopes, delete your previously saved credentials
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube.force-ssl']
@@ -34,20 +26,18 @@ def get_credentials():
     Returns:
         Credentials, the obtained credential.
     """
-    home_dir = os.path.expanduser('~')
-    credential_path = CREDS_FILENAME
-
-    store = Storage(credential_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
-        flow.user_agent = APPLICATION_NAME
-        credentials = tools.run_flow(flow, store)
-    return credentials
+    flow = InstalledAppFlow.from_client_secrets_file(
+        CLIENT_SECRET_FILE,
+        scopes=SCOPES
+    )
+    flow.run_local_server()
+    return flow.credentials
 
 def main():
     credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
+    with open(CREDS_FILENAME, 'w+') as file:
+        file.write(credentials.to_json())
+        print(f'Wrote new credentials to {CREDS_FILENAME}.')
 
 if __name__ == '__main__':
     main()

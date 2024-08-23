@@ -1,18 +1,23 @@
-version: 2
+version: 2.1
 
 jobs:
-  build:
+  upload-zoom-recordings:
+    parameters:
+      delete_after_upload:
+        description: 'Delete Zoom recordings after uploading to YouTube'
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Dry run: report planned work, but do not actually upload or change anything'
+        type: boolean
+        default: false
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
     environment:
-      - EDGI_ZOOM_DELETE_AFTER_UPLOAD: '1'
+      - EDGI_ZOOM_DELETE_AFTER_UPLOAD: << parameters.delete_after_upload >>
+      - EDGI_DRY_RUN: << parameters.dry_run >>
     steps:
       - checkout
-
-      - run:
-          name: skip destructive action on non-main
-          command: |
-            echo '[[ "main" != "$CIRCLE_BRANCH" ]] && unset EDGI_ZOOM_DELETE_AFTER_UPLOAD' >> $BASH_ENV
 
       - run:
           name: decrypt files
@@ -38,7 +43,7 @@ jobs:
           paths:
             - ~/.cache/pip
           key: v1-pip-{{ checksum "requirements.txt" }}
-      
+
       - run:
           name: run script
           command: |
@@ -46,13 +51,15 @@ jobs:
             python3 scripts/upload_zoom_recordings.py
 
 workflows:
-  version: 2
   commit:
     jobs:
-      - build
+      - upload-zoom-recordings:
+          delete_after_upload: false
+          dry_run: true
   youtube-upload:
     jobs:
-      - build
+      - upload-zoom-recordings:
+          delete_after_upload: true
     triggers:
       - schedule:
           # Every hour in the afternoon at :10 on weekdays

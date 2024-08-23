@@ -26,19 +26,15 @@
 #     See README for how to generate this files.
 
 from datetime import datetime
-import functools
-import json
 import os
 import re
 import requests
-from subprocess import check_output, CalledProcessError, PIPE
 import sys
 import tempfile
 from urllib.parse import urlparse
 from zoomus import ZoomClient
 from lib.constants import USER_TYPES, VIDEO_CATEGORY_IDS
-from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist
-from types import SimpleNamespace
+from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 
 YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
@@ -47,6 +43,7 @@ ZOOM_ACCOUNT_ID = os.environ['EDGI_ZOOM_ACCOUNT_ID']
 
 def is_truthy(x): return x.lower() in ['true', '1', 'y', 'yes']
 ZOOM_DELETE_AFTER_UPLOAD = is_truthy(os.environ.get('EDGI_ZOOM_DELETE_AFTER_UPLOAD', ''))
+DRY_RUN = is_truthy(os.environ.get('EDGI_DRY_RUN', ''))
 
 MEETINGS_TO_RECORD = ['EDGI Community Standup']
 DEFAULT_YOUTUBE_PLAYLIST = 'Uploads from Zoom'
@@ -87,7 +84,15 @@ def download_file(url, download_path, query=None):
     return filepath
 
 def main():
+    if DRY_RUN:
+        print('⚠️ This is a dry run! Videos will not actually be uploaded.\n')
+
     youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
+    if not validate_youtube_credentials(youtube):
+        print(f'The credentials in {YOUTUBE_CREDENTIALS_PATH} were not valid!')
+        print('Please use `python scripts/auth.py` to re-authorize.')
+        return sys.exit(1)
+
     with tempfile.TemporaryDirectory() as tmpdirname:
         print('Creating tmp dir: ' + tmpdirname)
         meetings = client.recording.list(user_id=user_id).json()['meetings']
@@ -100,10 +105,10 @@ def main():
             if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
                 print('  Skipping...')
                 continue
-            
+
             videos = [file for file in meeting['recording_files']
-                    if file['file_type'].lower() == 'mp4']
-            
+                      if file['file_type'].lower() == 'mp4']
+
             if len(videos) == 0:
                 print(f'  No videos to upload: {meeting["topic"]}')
                 continue
@@ -120,26 +125,27 @@ def main():
                 # `config.get()` so we get an exception if things have changed and
                 # this data is no longer available.
                 filepath = download_file(url,
-                                        tmpdirname,
-                                        query={"access_token": client.config["token"]})
+                                         tmpdirname,
+                                         query={"access_token": client.config["token"]})
+
+                recording_date = fix_date(meeting['start_time'])
                 title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
 
-                # These characters don't work within Python subprocess commands
-                chars_to_strip = '<>'
-                title = re.sub('['+chars_to_strip+']', '', title)
+                print(f'  Uploading {filepath}\n    {title=}\n    {recording_date=}')
+                if not DRY_RUN:
+                    video_id = upload_video(youtube,
+                                            filepath,
+                                            title=title,
+                                            category=VIDEO_CATEGORY_IDS["Science & Technology"],
+                                            license=DEFAULT_VIDEO_LICENSE,
+                                            recording_date=recording_date,
+                                            privacy_status='unlisted')
 
-                video_id = upload_video(youtube,
-                                filepath,
-                                title=title,
-                                category=VIDEO_CATEGORY_IDS["Science & Technology"],
-                                license=DEFAULT_VIDEO_LICENSE,
-                                recording_date=fix_date(meeting['start_time']),
-                                privacy_status='unlisted')
-                
                 # Add all videos to default playlist
                 print('  Adding to main playlist: Uploads from Zoom')
-                add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
-                
+                if not DRY_RUN:
+                    add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
+
                 # Add to additional playlists
                 playlist_name = ''
                 if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
@@ -150,7 +156,7 @@ def main():
 
                 if 'community call' in meeting['topic'].lower():
                     playlist_name = 'Community Calls'
-                
+
                 if 'edgi introductions' in meeting['topic'].lower():
                     playlist_name = 'EDGI Introductions'
 
@@ -159,14 +165,15 @@ def main():
 
                 if playlist_name:
                     print(f'  Adding to call playlist: {playlist_name}')
-                    add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+                    if not DRY_RUN:
+                        add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
-                if ZOOM_DELETE_AFTER_UPLOAD:
+                if ZOOM_DELETE_AFTER_UPLOAD and not DRY_RUN:
                     # Just delete the video for now, since that takes the most storage space.
                     # We should save the chat log transcript in a comment on the video.
-                    
+
                     # We're using the zoom api directly instead of zoomus, because zoomus only implements
-                    # deleting all recorded files related to the meeting using the v2 API, 
+                    # deleting all recorded files related to the meeting using the v2 API,
                     # while we still want to retain the audio and chat files for backup.
                     url = f'https://api.zoom.us/v2/meetings/{file["meeting_id"]}/recordings/{file["id"]}'
                     querystring = {"action":"trash"}
@@ -176,7 +183,7 @@ def main():
                         print(f'  Deleted {file["file_type"]} file from Zoom for recording: {meeting["topic"]}')
                     else:
                         print(f'  The file could not be deleted. We received this response: {response.status_code}. Please check https://marketplace.zoom.us/docs/api-reference/zoom-api/cloud-recording/recordingdeleteone for what that could mean.')
-                    
+
 
 if __name__ == '__main__':
     main()
