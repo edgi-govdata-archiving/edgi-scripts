@@ -28,6 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Find ffmpeg
+        run: which ffmpeg
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
