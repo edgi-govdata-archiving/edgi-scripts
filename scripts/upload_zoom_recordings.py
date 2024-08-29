@@ -35,7 +35,7 @@ import tempfile
 from typing import Dict
 from urllib.parse import urlparse
 from zoomus import ZoomClient
-from lib.constants import USER_TYPES, VIDEO_CATEGORY_IDS
+from lib.constants import VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 
 YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
@@ -175,9 +175,8 @@ def main():
 
     zoom = ZoomClient(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, ZOOM_ACCOUNT_ID)
 
-    # Get main account, which should be 'pro'
-    zoom_user_id = next(user['id'] for user in zoom.user.list().json()['users']
-                        if user['type'] >= USER_TYPES['pro'])
+    # Official meeting recordings we will upload belong to the account owner.
+    zoom_user_id = zoom.user.list(role_id=ZOOM_ROLES['owner']).json()['users'][0]['id']
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         print(f'Creating tmp dir: {tmpdirname}\n')
