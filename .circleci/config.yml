@@ -20,9 +20,10 @@ jobs:
       - checkout
 
       - run:
-          name: Find ffmpeg
+          name: Install ffmpeg
           command: |
-            which ffmpeg
+            sudo apt-get update
+            sudo apt-get install ffmpeg
 
       - run:
           name: decrypt files
