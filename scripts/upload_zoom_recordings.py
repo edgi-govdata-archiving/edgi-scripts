@@ -129,19 +129,6 @@ def download_zoom_file(client: ZoomClient, url: str, download_directory: str) ->
     return filepath
 
 
-def delete_zoom_recording_file(client: ZoomClient, file):
-    """
-    Delete a single file from a meeting recording.
-
-    This exists because zoomus only has built in support for deleting a whole
-    recording and all its files. However, we often want to delete a particular
-    file (e.g. delete the video, but leave the audio or chat transcript).
-    """
-    response = client.meeting.delete_request(f'/meetings/{file["meeting_id"]}/recordings/{file["id"]}', params={'action': 'trash'})
-    if response.status_code != 204:
-        raise ZoomError(response)
-
-
 def meeting_had_no_participants(client: ZoomClient, meeting: Dict) -> bool:
     participants = ZoomError.parse_or_raise(client.past_meeting.get_participants(meeting_id=meeting['uuid']))['participants']
 
@@ -280,11 +267,15 @@ def main():
 
                 if ZOOM_DELETE_AFTER_UPLOAD and not DRY_RUN:
                     # Just delete the video for now, since that takes the most storage space.
-                    try:
-                        delete_zoom_recording_file(zoom, file)
+                    response = zoom.recording.delete_single_recording(
+                        meeting_id=file['meeting_id'],
+                        recording_id=file['id'],
+                        action='trash'
+                    )
+                    if response.status_code == 204:
                         print(f'  🗑️ Deleted {file["file_type"]} file from Zoom for recording: {meeting["topic"]}')
-                    except ZoomError as error:
-                        print(f'  ❌ {error}')
+                    else:
+                        print(f'  ❌ {ZoomError(response)}')
 
 
 if __name__ == '__main__':
