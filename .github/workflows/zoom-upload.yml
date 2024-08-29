@@ -2,10 +2,8 @@ name: Upload Zoom Recordings to YouTube
 
 on:
   schedule:
-    # 10 minutes after every hour before noon on weekdays
-    # TODO: when we are ready to switch off Circle, run every hour instead of
-    # just in the morning.
-    - cron: "10 0-12 * * 1-5"
+    # 10 minutes after every hour on weekdays
+    - cron: "10 * * * 1-5"
 
   workflow_dispatch:
     inputs:

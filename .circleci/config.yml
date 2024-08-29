@@ -61,16 +61,21 @@ workflows:
       - upload-zoom-recordings:
           delete_after_upload: false
           dry_run: true
-  youtube-upload:
-    jobs:
-      - upload-zoom-recordings:
-          delete_after_upload: true
-    triggers:
-      - schedule:
-          # Every hour in the afternoon at :10 on weekdays
-          # (This is only in the afternoon so we can compare how this is doing
-          # vs. how GitHub Actions is doing and then maybe turn off Circle.)
-          cron: "10 13-23 * * 1-5"
-          filters:
-            branches:
-              only: main
+
+  # FIXME: This script is temporarily disabled in CircleCI. Once we are
+  # confident it's doing the job reliably on GitHub, delete this whole
+  # CircleCI config file.
+  #
+  # youtube-upload:
+  #   jobs:
+  #     - upload-zoom-recordings:
+  #         delete_after_upload: true
+  #   triggers:
+  #     - schedule:
+  #         # Every hour in the afternoon at :10 on weekdays
+  #         # (This is only in the afternoon so we can compare how this is doing
+  #         # vs. how GitHub Actions is doing and then maybe turn off Circle.)
+  #         cron: "10 13-23 * * 1-5"
+  #         filters:
+  #           branches:
+  #             only: main
