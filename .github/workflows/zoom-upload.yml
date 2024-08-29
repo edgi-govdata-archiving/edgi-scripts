@@ -26,10 +26,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install ffmpeg
 
-      - name: Find ffmpeg
-        run: which ffmpeg
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
