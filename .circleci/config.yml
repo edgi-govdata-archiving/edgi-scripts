@@ -20,11 +20,16 @@ jobs:
       - checkout
 
       - run:
+          name: Install ffmpeg
+          command: |
+            sudo apt-get update
+            sudo apt-get install ffmpeg
+
+      - run:
           name: decrypt files
           command: |
             openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d -md sha256
             openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d -md sha256
-
 
       - restore_cache:
           keys:
