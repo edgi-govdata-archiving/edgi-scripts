@@ -25,19 +25,12 @@ class ZoomError(Exception):
             self.data = {}
 
         self.message = message or self.data.pop('message', 'Zoom API error')
-        self.code = self.data.pop('code')
+        self.code = self.data.pop('code', 0)
         super().__init__(
             f'{self.message} '
             f'(code={self.code}, http_status={self.response.status_code}) '
             f'Check the docs for details: {ZOOM_DOCS_URL}.'
         )
-
-    @classmethod
-    def raise_for_response(cls, response: Response) -> Response:
-        if response.status_code >= 400:
-            raise cls(response)
-
-        return response
 
 
 class ZoomResponse:
@@ -61,16 +54,28 @@ class ZoomResponse:
     def text(self):
         return self.response.text
 
+    def raise_for_status(self):
+        self.raise_for_response(self.response)
+
+    @classmethod
+    def is_error(cls, response: Response) -> bool:
+        return response.status_code >= 400
+
+    @classmethod
+    def raise_for_response(cls, response: Response):
+        if cls.is_error(response):
+            raise ZoomError(response)
+
 
 def wrap_method_with_parsing(original):
     @wraps(original)
     def wrapper(*args, **kwargs):
         result = original(*args, **kwargs)
         if isinstance(result, Response):
-            ZoomError.raise_for_response(result)
-            return ZoomResponse(result)
-        else:
-            return result
+            result = ZoomResponse(result)
+            result.raise_for_status()
+
+        return result
 
     return wrapper
 
@@ -119,7 +124,7 @@ class FancyZoom(ZoomClient):
         response = requests.get(url, stream=True, headers={
             'Authorization': f'Bearer {self.config['token']}'
         })
-        ZoomError.raise_for_response(response)
+        ZoomResponse.raise_for_response(response)
         return response
 
     def download_file(self, url: str, download_directory: str) -> str:
