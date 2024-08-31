@@ -1,5 +1,9 @@
-from typing import Dict
+
 from functools import wraps
+from typing import Dict
+from urllib.parse import urlsplit
+import os.path
+import requests
 from requests import Response
 from zoomus import ZoomClient
 
@@ -23,9 +27,17 @@ class ZoomError(Exception):
         self.message = message or self.data.pop('message', 'Zoom API error')
         self.code = self.data.pop('code')
         super().__init__(
-            f'{self.message} (code={self.code}, http_status={self.response.status_code}) '
+            f'{self.message} '
+            f'(code={self.code}, http_status={self.response.status_code}) '
             f'Check the docs for details: {ZOOM_DOCS_URL}.'
         )
+
+    @classmethod
+    def raise_for_response(cls, response: Response) -> Response:
+        if response.status_code >= 400:
+            raise cls(response)
+
+        return response
 
 
 class ZoomResponse:
@@ -55,10 +67,8 @@ def wrap_method_with_parsing(original):
     def wrapper(*args, **kwargs):
         result = original(*args, **kwargs)
         if isinstance(result, Response):
-            if result.status_code >= 400:
-                raise ZoomError(result)
-            else:
-                return ZoomResponse(result)
+            ZoomError.raise_for_response(result)
+            return ZoomResponse(result)
         else:
             return result
 
@@ -100,3 +110,30 @@ class FancyZoom(ZoomClient):
 
         for component in self.components.values():
             wrap_component_with_parsing(component)
+
+    def get_file(self, url: str) -> Response:
+        # Note the token info in the client isn't really *public*, but it's
+        # not explicitly private, either. Use `config[]` syntax instead of
+        # `config.get()` so we get an exception if things have changed and
+        # this data is no longer available.
+        response = requests.get(url, stream=True, headers={
+            'Authorization': f'Bearer {self.config['token']}'
+        })
+        ZoomError.raise_for_response(response)
+        return response
+
+    def download_file(self, url: str, download_directory: str) -> str:
+        response = self.get_file(url)
+        resolved_url = response.url
+        filename = os.path.basename(urlsplit(resolved_url).path)
+        filepath = os.path.join(download_directory, filename)
+        if os.path.exists(filepath):
+            response.close()
+            return
+
+        with open(filepath, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+
+        return filepath

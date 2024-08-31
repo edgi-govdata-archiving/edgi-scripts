@@ -31,7 +31,6 @@ import dateutil.parser
 import json
 import os
 import re
-import requests
 import subprocess
 import sys
 import tempfile
@@ -80,29 +79,6 @@ def fix_date(date_string: str) -> str:
 
 def pretty_date(date_string: str) -> str:
     return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ').strftime('%b %-d, %Y')
-
-
-def download_zoom_file(client: FancyZoom, url: str, download_directory: str) -> str:
-    # Note the token info in the client isn't really *public*, but it's
-    # not explicitly private, either. Use `config[]` syntax instead of
-    # `config.get()` so we get an exception if things have changed and
-    # this data is no longer available.
-    r = requests.get(url, stream=True, headers={
-        'Authorization': f'Bearer {client.config['token']}'
-    })
-    r.raise_for_status()
-    resolved_url = r.url
-    filename = os.path.basename(urlsplit(resolved_url).path)
-    filepath = os.path.join(download_directory, filename)
-    if os.path.exists(filepath):
-        r.close()
-        return
-    with open(filepath, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                f.write(chunk)
-
-    return filepath
 
 
 def meeting_had_no_participants(client: FancyZoom, meeting: Dict) -> bool:
@@ -392,7 +368,7 @@ def main():
             for file in videos:
                 url = file['download_url']
                 print(f'    Download from {url}...')
-                filepath = download_zoom_file(zoom, url, tmpdirname)
+                filepath = zoom.download_file(url, tmpdirname)
 
                 if video_has_audio(filepath):
                     if args.service == 'gdrive':
