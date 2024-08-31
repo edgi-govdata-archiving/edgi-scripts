@@ -28,12 +28,10 @@
 from datetime import datetime
 import os
 import re
-import requests
 import subprocess
 import sys
 import tempfile
 from typing import Dict
-from urllib.parse import urlparse
 from lib.zoom import FancyZoom, ZoomError
 from lib.constants import VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
@@ -75,29 +73,6 @@ def fix_date(date_string: str) -> str:
 
 def pretty_date(date_string: str) -> str:
     return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ').strftime('%b %-d, %Y')
-
-
-def download_zoom_file(client: FancyZoom, url: str, download_directory: str) -> str:
-    # Note the token info in the client isn't really *public*, but it's
-    # not explicitly private, either. Use `config[]` syntax instead of
-    # `config.get()` so we get an exception if things have changed and
-    # this data is no longer available.
-    r = requests.get(url, stream=True, headers={
-        'Authorization': f'Bearer {client.config['token']}'
-    })
-    r.raise_for_status()
-    resolved_url = r.url
-    filename = urlparse(resolved_url).path.split('/')[-1]
-    filepath = os.path.join(download_directory, filename)
-    if os.path.exists(filepath):
-        r.close()
-        return
-    with open(filepath, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                f.write(chunk)
-
-    return filepath
 
 
 def meeting_had_no_participants(client: FancyZoom, meeting: Dict) -> bool:
@@ -162,7 +137,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmpdirname:
         print(f'Creating tmp dir: {tmpdirname}\n')
 
-        meetings = zoom.recording.list(user_id=zoom_user_id})['meetings']
+        meetings = zoom.recording.list(user_id=zoom_user_id)['meetings']
         meetings = sorted(meetings, key=lambda m: m['start_time'])
         # Filter recordings less than 1 minute
         meetings = filter(lambda m: m['duration'] > 1, meetings)
@@ -203,7 +178,7 @@ def main():
             for file in videos:
                 url = file['download_url']
                 print(f'    Download from {url}...')
-                filepath = download_zoom_file(zoom, url, tmpdirname)
+                filepath = zoom.download_file(url, tmpdirname)
 
                 if video_has_audio(filepath):
                     recording_date = fix_date(meeting['start_time'])
