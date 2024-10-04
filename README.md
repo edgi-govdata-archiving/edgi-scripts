@@ -1,7 +1,6 @@
 # EDGI Scripts
 
-[![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](https://github.com/edgi-govdata-archiving/overview/blob/main/CONDUCT.md) [![Run scripts](https://img.shields.io/badge/scheduled%20scripts-RUN-44cc11.svg)][circleci-proj]
-[![CircleCI Status](https://img.shields.io/circleci/project/github/edgi-govdata-archiving/edgi-scripts.svg?label=CircleCI)][circleci-proj]
+[![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](https://github.com/edgi-govdata-archiving/overview/blob/main/CONDUCT.md) [![Scheduled Zoom → YT Uploads][zoom-upload-action-badge]][zoom-upload-action-runs]
 
 Helper scripts for EDGI's digital infrastructure.
 
@@ -18,14 +17,14 @@ We use this as a catch-all for simple scripts that help with repeating tasks. Ma
 - **Python >=3.8.** A programming language common in scripting.
 - [**Click.**][click] A Python library for writing simple command-line
   tools.
-- [**CircleCI.**][circleci] A script-running service that [runs scheduled
-  tasks][circleci-cron] for us in the cloud.
-  
+- [**GitHub Actions.**][github-actions] A script-running service that runs scheduled
+  tasks for us in the cloud.
+
 ## About these Automated Scripts
 
 Some of these scripts are run automatically at regular intervals,
-using CircleCI's "workflow" feature. The schedule is set in the
-[`.circleci/config.yml`][circleci-config] file within this repo.
+using GitHub's "actions workflow" feature. The schedule is set in the
+[`.github/workflows/zoom-upload.yml`](.github/workflows/zoom-upload.yml) file within this repo.
 
 ## Script Catalog
 
@@ -84,12 +83,10 @@ Note: the script isn't smart enough to detect duplicate videos being
 uploaded more than once, but YouTube will recognize and disable them
 after upload
 
-#### Usage via CircleCI
+#### Usage via GitHub Actions
 
-**For forcing a cloud run on-demand:** Visit [our project page on the
-CircleCI platform][circleci-proj], select the `main` branch from the dropdowns
-near the top of the page, and click the "Trigger Pipeline" button. (You will
-need to have push access on the repo itself.)
+**For forcing a cloud run on-demand:** Visit [the actions page][zoom-upload-action-runs] and click the “run workflow” button near the top-right. In the popup, select your options and click “run workflow.” (You will
+need to have the right permissions set to click the button.)
 
 #### Local Usage
 
@@ -129,7 +126,7 @@ openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out c
 # Authorize the script to use EDGI's YouTube account.
 # This needs to be done from a system with a windowed browser (i.e. not a
 # server). It will generate a file named `.youtube-upload-credentials.json` in
-# the repo root dir. If running the script on a server is required, you will 
+# the repo root dir. If running the script on a server is required, you will
 # need to transfer this file from your workstation onto the server.
 python scripts/auth.py
 
@@ -223,10 +220,7 @@ See the [`LICENSE`](/LICENSE) file for details.
 
 <!-- Links -->
 [click]: http://click.pocoo.org/5/
-[circleci]: https://circleci.com/docs/about-circleci/
-[circleci-cron]: https://circleci.com/docs/workflows/#scheduling-a-workflow
-[circleci-envvars]: https://circleci.com/docs/2.0/env-vars/#notes-on-security
-[circleci-encfile]: https://github.com/circleci/encrypted-files
-[circleci-config]: https://github.com/edgi-govdata-archiving/edgi-scripts/blob/main/.circleci/config.yml
-[circleci-proj]: https://app.circleci.com/pipelines/github/edgi-govdata-archiving/edgi-scripts
 [conda]: https://conda.io/miniconda.html
+[github-actions]: https://github.com/edgi-govdata-archiving/edgi-scripts/actions
+[zoom-upload-action-runs]: https://github.com/edgi-govdata-archiving/edgi-scripts/actions/workflows/zoom-upload.yml
+[zoom-upload-action-badge]: https://github.com/edgi-govdata-archiving/edgi-scripts/actions/workflows/zoom-upload.yml/badge.svg?event=schedule
