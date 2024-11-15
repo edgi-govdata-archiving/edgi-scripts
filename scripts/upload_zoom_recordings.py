@@ -77,7 +77,7 @@ class ZoomError(Exception):
 
         data['http_status'] = response.status_code
         full_message = f'{message} ({data!r}) Check the docs for details: https://developers.zoom.us/docs/api/.'
-        super.__init__(full_message)
+        super().__init__(full_message)
 
     @classmethod
     def is_error(cls, response):
