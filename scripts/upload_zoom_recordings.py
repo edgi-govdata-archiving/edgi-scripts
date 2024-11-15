@@ -77,7 +77,7 @@ class ZoomError(Exception):
 
         data['http_status'] = response.status_code
         full_message = f'{message} ({data!r}) Check the docs for details: https://developers.zoom.us/docs/api/.'
-        super.__init__(full_message)
+        super().__init__(full_message)
 
     @classmethod
     def is_error(cls, response):
@@ -138,6 +138,16 @@ def meeting_had_no_participants(client: ZoomClient, meeting: Dict) -> bool:
     )
 
 
+def recording_status(meeting: Dict) -> str:
+    for file in meeting['recording_files']:
+        if file['recording_end'] == '':
+            return 'ongoing'
+        elif file['status'] != 'completed':
+            return 'processing'
+
+    return 'ready'
+
+
 def video_has_audio(file_path: str) -> bool:
     """Detect whether a video file has a non-silent audio track."""
     result = subprocess.run([
@@ -191,6 +201,11 @@ def main():
             # 3. filter by criteria (no-op for now)
             if meeting['topic'] not in MEETINGS_TO_RECORD and DO_FILTER:
                 print('  Skipping: meeting not in topic list.')
+                continue
+
+            status = recording_status(meeting)
+            if status != 'ready':
+                print(f'  Skipping: recording is still {status}.')
                 continue
 
             if meeting_had_no_participants(zoom, meeting):
