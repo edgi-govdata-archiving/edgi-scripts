@@ -18,11 +18,11 @@ on:
       from:
         description: 'Look for recordings after this date/time'
         type: string
-        default: ''
+        default: '5d'
       to:
-        description: 'Look for recordings after this date/time'
+        description: 'Look for recordings before this date/time'
         type: string
-        default: ''
+        default: '+1d'
 
   pull_request: {}
 
