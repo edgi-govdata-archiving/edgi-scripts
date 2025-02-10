@@ -18,11 +18,11 @@ on:
       from:
         description: 'Look for recordings after this date/time'
         type: string
-        default: '5d'
+        default: ''
       to:
         description: 'Look for recordings before this date/time'
         type: string
-        default: '+1d'
+        default: ''
 
   pull_request: {}
 
@@ -65,5 +65,5 @@ jobs:
           EDGI_ZOOM_CLIENT_SECRET: ${{ secrets.EDGI_ZOOM_CLIENT_SECRET }}
         run: |
           python3 scripts/upload_zoom_recordings.py \
-            --from '${{ inputs.from }}' \
-            --to '${{ inputs.to }}'
+            --from '${{ inputs.from || '5d' }}' \
+            --to '${{ inputs.to || '+1d' }}'
