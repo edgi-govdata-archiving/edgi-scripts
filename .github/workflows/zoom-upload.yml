@@ -15,6 +15,14 @@ on:
         description: 'Dry run: report planned work, but do not actually upload or change anything'
         type: boolean
         default: false
+      from:
+        description: 'Look for recordings after this date/time'
+        type: string
+        default: ''
+      to:
+        description: 'Look for recordings after this date/time'
+        type: string
+        default: ''
 
   pull_request: {}
 
@@ -56,4 +64,6 @@ jobs:
           EDGI_ZOOM_CLIENT_ID: ${{ secrets.EDGI_ZOOM_CLIENT_ID }}
           EDGI_ZOOM_CLIENT_SECRET: ${{ secrets.EDGI_ZOOM_CLIENT_SECRET }}
         run: |
-          python3 scripts/upload_zoom_recordings.py
+          python3 scripts/upload_zoom_recordings.py \
+            --from '${{ inputs.from }}' \
+            --to '${{ inputs.to }}'

@@ -25,7 +25,9 @@
 #
 #     See README for how to generate this files.
 
-from datetime import datetime
+from argparse import ArgumentParser
+from datetime import datetime, date, timedelta, timezone
+import dateutil.parser
 import os
 import re
 import requests
@@ -173,8 +175,43 @@ def video_has_audio(file_path: str) -> bool:
     return True
 
 
+def cli_datetime(datetime_string) -> datetime:
+    raw = datetime_string.strip()
+    delta = re.match(r'^(\+?)(\d+)([dhm])$', raw)
+    if delta:
+        unit = {'d': 'days', 'h': 'hours', 'm': 'minutes'}[delta.group(3)]
+        value = float(delta.group(2))
+        if delta.group(1) != '+':
+            value *= -1
+        return datetime.now(timezone.utc) + timedelta(**{unit: value})
+
+    parsed = dateutil.parser.isoparse(raw)
+    # If it's a date, treat it as UTC.
+    if re.match(r'^\d{4}-\d\d-\d\d$', raw):
+        return parsed.replace(tzinfo=timezone.utc)
+    else:
+        return parsed.astimezone(timezone.utc)
+
+
 def main():
-    if DRY_RUN:
+    parser = ArgumentParser()
+    parser.add_argument('--dry-run', action='store_true', help='Do not upload recordings.')
+    parser.add_argument('--from', type=cli_datetime,
+                        default=cli_datetime('3d'), dest='from_time',
+                        help='Look for recordings after this date/time. '
+                             'Can be an ISO date or time ("2025-01-01") or a '
+                             'number of days/hours/minutes ago ("5d" = 5 days '
+                             'ago) or from now ("+5d" = 5 days from now).')
+    parser.add_argument('--to', type=cli_datetime,
+                        default=cli_datetime('+1d'), dest='to_time',
+                        help='Look for recordings before this date/time. '
+                             'Can be an ISO date or time ("2025-01-01") or a '
+                             'number of days/hours/minutes ago ("5d" = 5 days '
+                             'ago) or from now ("+5d" = 5 days from now).')
+    args = parser.parse_args()
+
+    dry_run = args.dry_run or DRY_RUN
+    if dry_run:
         print('⚠️ This is a dry run! Videos will not actually be uploaded.\n')
 
     youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
@@ -191,7 +228,13 @@ def main():
     with tempfile.TemporaryDirectory() as tmpdirname:
         print(f'Creating tmp dir: {tmpdirname}\n')
 
-        meetings = ZoomError.parse_or_raise(zoom.recording.list(user_id=zoom_user_id))['meetings']
+        print('Looking for videos to upload between '
+              f'{args.from_time} and {args.to_time}...')
+        meetings = ZoomError.parse_or_raise(zoom.recording.list(
+            user_id=zoom_user_id,
+            start=args.from_time,
+            end=args.to_time
+        ))['meetings']
         meetings = sorted(meetings, key=lambda m: m['start_time'])
         # Filter recordings less than 1 minute
         meetings = filter(lambda m: m['duration'] > 1, meetings)
@@ -210,7 +253,7 @@ def main():
 
             if meeting_had_no_participants(zoom, meeting):
                 print('  Deleting recording: nobody attended this meeting.')
-                if not DRY_RUN:
+                if not dry_run:
                     response = zoom.recording.delete(meeting_id=meeting['uuid'], action='trash')
                     if response.status_code < 300:
                         print('  🗑️ Deleted recording.')
@@ -239,7 +282,7 @@ def main():
                     title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
 
                     print(f'    Uploading {filepath}\n      {title=}\n      {recording_date=}')
-                    if not DRY_RUN:
+                    if not dry_run:
                         video_id = upload_video(youtube,
                                                 filepath,
                                                 title=title,
@@ -250,7 +293,7 @@ def main():
 
                     # Add all videos to default playlist
                     print('    Adding to main playlist: Uploads from Zoom')
-                    if not DRY_RUN:
+                    if not dry_run:
                         add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
 
                     # Add to additional playlists
@@ -272,14 +315,14 @@ def main():
 
                     if playlist_name:
                         print(f'    Adding to call playlist: {playlist_name}')
-                        if not DRY_RUN:
+                        if not dry_run:
                             add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
 
                     # TODO: save the chat log transcript in a comment on the video.
                 else:
                     print('    Skipping upload: video was silent (no mics were on).')
 
-                if ZOOM_DELETE_AFTER_UPLOAD and not DRY_RUN:
+                if ZOOM_DELETE_AFTER_UPLOAD and not dry_run:
                     # Just delete the video for now, since that takes the most storage space.
                     response = zoom.recording.delete_single_recording(
                         meeting_id=file['meeting_id'],
