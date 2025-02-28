@@ -1,9 +1,13 @@
 name: Upload Zoom Recordings to YouTube
 
 on:
-  schedule:
-    # 10 minutes after every hour on weekdays
-    - cron: "10 * * * 1-5"
+  # EDGI AC no longer wishes to upload all recordings publicly to YouTube, so this is disabled for now!
+  # We plan to switch to uploading to a private Google Drive for EDGI members instead, at which point
+  # this should be turned back on.
+  #
+  # schedule:
+  #   # 10 minutes after every hour on weekdays
+  #   - cron: "10 * * * 1-5"
 
   workflow_dispatch:
     inputs:
