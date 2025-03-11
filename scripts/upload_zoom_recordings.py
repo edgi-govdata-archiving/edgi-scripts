@@ -39,8 +39,8 @@ from urllib.parse import urlparse
 from zoomus import ZoomClient
 from lib.constants import VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
+from lib.gdrive import get_gdrive_client, validate_gdrive_credentials
 
-YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
 ZOOM_ACCOUNT_ID = os.environ['EDGI_ZOOM_ACCOUNT_ID']
@@ -193,6 +193,67 @@ def cli_datetime(datetime_string) -> datetime:
         return parsed.astimezone(timezone.utc)
 
 
+def save_to_youtube(youtube, meeting: dict, filepath: str, dry_run: bool) -> None:
+    recording_date = fix_date(meeting['start_time'])
+    title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
+
+    print(f'    Uploading {filepath}\n      {title=}\n      {recording_date=}')
+    if not dry_run:
+        video_id = upload_video(youtube,
+                                filepath,
+                                title=title,
+                                category=VIDEO_CATEGORY_IDS["Science & Technology"],
+                                license=DEFAULT_VIDEO_LICENSE,
+                                recording_date=recording_date,
+                                privacy_status='unlisted')
+
+    # Add all videos to default playlist
+    print('    Adding to main playlist: Uploads from Zoom')
+    if not dry_run:
+        add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
+
+    # Add to additional playlists
+    playlist_name = ''
+    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
+        playlist_name = 'Website Monitoring'
+
+    if 'data together' in meeting['topic'].lower():
+        playlist_name = 'Data Together'
+
+    if 'community call' in meeting['topic'].lower():
+        playlist_name = 'Community Calls'
+
+    if 'edgi introductions' in meeting['topic'].lower():
+        playlist_name = 'EDGI Introductions'
+
+    if 'all-edgi' in meeting['topic'].lower():
+        playlist_name = 'All-EDGI Meetings'
+
+    if playlist_name:
+        print(f'    Adding to call playlist: {playlist_name}')
+        if not dry_run:
+            add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
+    # TODO: save the chat log transcript in a comment on the video.
+
+
+def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool) -> None:
+    recording_date = fix_date(meeting['start_time'])
+    title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
+
+    raise NotImplementedError
+
+    # Download other files
+
+    # Determine folder to upload to
+
+    # If relevant, find correct subfolder
+
+    # Create folder for meeting
+
+    # Upload all files
+
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('--dry-run', action='store_true', help='Do not upload recordings.')
@@ -208,15 +269,26 @@ def main():
                              'Can be an ISO date or time ("2025-01-01") or a '
                              'number of days/hours/minutes ago ("5d" = 5 days '
                              'ago) or from now ("+5d" = 5 days from now).')
+    parser.add_argument('service', choices=('gdrive', 'youtube'),
+                        default='gdrive',
+                        help='Which service to upload recordings to.')
     args = parser.parse_args()
 
     dry_run = args.dry_run or DRY_RUN
     if dry_run:
         print('⚠️ This is a dry run! Videos will not actually be uploaded.\n')
 
-    youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
-    if not validate_youtube_credentials(youtube):
-        print(f'The credentials in {YOUTUBE_CREDENTIALS_PATH} were not valid!')
+    if args.service == 'gdrive':
+        upload_client = get_gdrive_client()
+        valid = validate_gdrive_credentials(upload_client)
+    elif args.service == 'youtube':
+        upload_client = get_youtube_client()
+        valid = validate_youtube_credentials(upload_client)
+    else:
+        print(f'Unknown service type: "{args.service}"')
+        return sys.exit(1)
+    if not valid:
+        print(f'The credentials for {args.service} were not valid!')
         print('Please use `python scripts/auth.py` to re-authorize.')
         return sys.exit(1)
 
@@ -261,6 +333,7 @@ def main():
                         print(f'  ❌ {ZoomError(response)}')
                 continue
 
+            # FIXME: we now want to upload all files to gdrive
             videos = [file for file in meeting['recording_files']
                       if file['file_type'].lower() == 'mp4']
 
@@ -278,47 +351,10 @@ def main():
                 filepath = download_zoom_file(zoom, url, tmpdirname)
 
                 if video_has_audio(filepath):
-                    recording_date = fix_date(meeting['start_time'])
-                    title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
-
-                    print(f'    Uploading {filepath}\n      {title=}\n      {recording_date=}')
-                    if not dry_run:
-                        video_id = upload_video(youtube,
-                                                filepath,
-                                                title=title,
-                                                category=VIDEO_CATEGORY_IDS["Science & Technology"],
-                                                license=DEFAULT_VIDEO_LICENSE,
-                                                recording_date=recording_date,
-                                                privacy_status='unlisted')
-
-                    # Add all videos to default playlist
-                    print('    Adding to main playlist: Uploads from Zoom')
-                    if not dry_run:
-                        add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
-
-                    # Add to additional playlists
-                    playlist_name = ''
-                    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
-                        playlist_name = 'Website Monitoring'
-
-                    if 'data together' in meeting['topic'].lower():
-                        playlist_name = 'Data Together'
-
-                    if 'community call' in meeting['topic'].lower():
-                        playlist_name = 'Community Calls'
-
-                    if 'edgi introductions' in meeting['topic'].lower():
-                        playlist_name = 'EDGI Introductions'
-
-                    if 'all-edgi' in meeting['topic'].lower():
-                        playlist_name = 'All-EDGI Meetings'
-
-                    if playlist_name:
-                        print(f'    Adding to call playlist: {playlist_name}')
-                        if not dry_run:
-                            add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
-
-                    # TODO: save the chat log transcript in a comment on the video.
+                    if args.service == 'gdrive':
+                        save_to_gdrive(upload_client, meeting, filepath, dry_run)
+                    elif args.service == 'youtube':
+                        save_to_youtube(upload_client, meeting, filepath, dry_run)
                 else:
                     print('    Skipping upload: video was silent (no mics were on).')
 
