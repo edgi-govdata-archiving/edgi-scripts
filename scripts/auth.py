@@ -37,14 +37,15 @@ def get_credentials(scopes: list[str]):
 
 
 def main(service: str):
-    if service == 'youtube':
-        credentials_file = YOUTUBE_CREDENTIALS_FILE
-        scopes = YOUTUBE_SCOPES
-    elif service == 'gdrive':
-        credentials_file = GDRIVE_CREDENTIALS_FILE
-        scopes = GDRIVE_SCOPES
-    else:
-        raise ValueError(f'Unknown service type: "{service}"')
+    match service:
+        case 'youtube':
+            credentials_file = YOUTUBE_CREDENTIALS_FILE
+            scopes = YOUTUBE_SCOPES
+        case 'gdrive':
+            credentials_file = GDRIVE_CREDENTIALS_FILE
+            scopes = GDRIVE_SCOPES
+        case _:
+            raise ValueError(f'Unknown service type: "{service}"')
 
     credentials = get_credentials(scopes)
     with open(credentials_file, 'w+') as file:
@@ -57,7 +58,7 @@ if __name__ == '__main__':
                                         'services. This program will create '
                                         'or update files named '
                                         '`.<service>-upload-credentials`.')
-    parser.add_argument('service', choices=('youtube', 'gdrive'),
+    parser.add_argument('service', choices=('gdrive', 'youtube'),
                         default='gdrive',
                         help='Which service to update credentials for.')
     options = parser.parse_args()
