@@ -295,6 +295,9 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
     upload_name = f'{meeting_name}.mp4'
     print(f'    Uploading {filepath}\n      {upload_name=}')
     if not dry_run:
+        # TODO: improve resumability by following the suggestions around error
+        # handling at the end of this doc:
+        # https://github.com/googleapis/google-api-python-client/blob/main/docs/media.md
         file_info = {'name': f'{meeting_name}.mp4', 'parents': [meeting_folder['id']]}
         media = MediaFileUpload(filepath, mimetype='video/mp4', resumable=True)
         file = (
