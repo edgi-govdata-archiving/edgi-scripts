@@ -28,6 +28,7 @@
 from argparse import ArgumentParser
 from datetime import datetime, date, timedelta, timezone
 import dateutil.parser
+import json
 import os
 import re
 import requests
@@ -36,8 +37,9 @@ import sys
 import tempfile
 from typing import Dict
 from urllib.parse import urlparse
+from googleapiclient.http import MediaFileUpload
 from zoomus import ZoomClient
-from lib.constants import VIDEO_CATEGORY_IDS, ZOOM_ROLES
+from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 from lib.gdrive import get_gdrive_client, validate_gdrive_credentials
 
@@ -237,21 +239,106 @@ def save_to_youtube(youtube, meeting: dict, filepath: str, dry_run: bool) -> Non
     # TODO: save the chat log transcript in a comment on the video.
 
 
-def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool) -> None:
-    recording_date = fix_date(meeting['start_time'])
-    title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
+def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
+                   zoom_client: ZoomClient, tempdir: str) -> None:
+    recording_date = dateutil.parser.isoparse(meeting['start_time'])
 
-    raise NotImplementedError
+    with open('gdrive-locations.json') as file:
+        location_options = json.load(file)
 
-    # Download other files
+    topic = meeting['topic']
+    if re.search(r'\bac meeting', topic, flags=re.IGNORECASE):
+        location = location_options['ac']
+    elif re.search(r'\beew\b', topic, flags=re.IGNORECASE):
+        location = location_options['eew']
+    elif 'all-edgi' in topic.lower():
+        location = location_options['all_edgi']
+    else:
+        location = location_options['default']
 
-    # Determine folder to upload to
+    folder_id = location['folder']
+    folder_mime_type = 'application/vnd.google-apps.folder'
+    if location['subfolder_pattern']:
+        parent = location['folder']
+        subfolder_name = location['subfolder_pattern'].format(year=recording_date.year)
+        # You can't just list a folder's files -- there is only search.
+        # Docs: https://developers.google.com/drive/api/guides/search-files
+        result = client.files().list(
+            q=f"'{parent}' in parents and mimeType = '{folder_mime_type}' and name = '{subfolder_name}'",
+            fields="nextPageToken, files(id, name)",
+        ).execute()
+        if len(result['files']):
+            folder_id = result['files'][0]['id']
+        else:
+            print(f'    Creating year folder "{subfolder_name}"...')
+            if not dry_run:
+                subfolder_info = {
+                    'name': subfolder_name,
+                    'mimeType': folder_mime_type,
+                    'parents': [parent],
+                }
+                subfolder_object = client.files().create(body=subfolder_info, fields="id").execute()
+                folder_id = subfolder_object['id']
 
-    # If relevant, find correct subfolder
+    iso_date = recording_date.strftime('%Y-%m-%d')
+    meeting_name = f'{iso_date} {topic}'
+    print(f'    Creating meeting folder "{meeting_name}" in https://drive.google.com/drive/folders/{folder_id} ...')
+    if not dry_run:
+        meeting_folder_info = {
+            'name': meeting_name,
+            'mimeType': folder_mime_type,
+            'parents': [folder_id],
+        }
+        meeting_folder = client.files().create(body=meeting_folder_info, fields="id").execute()
 
-    # Create folder for meeting
+    # Upload files to folder_id
+    upload_name = f'{meeting_name}.mp4'
+    print(f'    Uploading {filepath}\n      {upload_name=}')
+    if not dry_run:
+        file_info = {'name': f'{meeting_name}.mp4', 'parents': [meeting_folder['id']]}
+        media = MediaFileUpload(filepath, mimetype='video/mp4', resumable=True)
+        file = (
+            client.files()
+            .create(body=file_info, media_body=media, fields="id")
+            .execute()
+        )
 
-    # Upload all files
+    for file in meeting['recording_files']:
+        download_url = file['download_url']
+        extension = file['file_extension'].lower()
+        upload_name = None
+        file_info = None
+        match file['file_type'].lower():
+            case 'mp4':
+                # We are already handling this file; nothing to do here.
+                pass
+            case 'm4a':
+                upload_name = f'{meeting_name} (audio).{extension}'
+            case 'chat':
+                upload_name = f'{meeting_name} (chat).{extension}'
+            case 'cc':
+                upload_name = f'{meeting_name} (transcript).{extension}'
+            case filetype:
+                # Print warning about unknown file type
+                print(f'    ⚠️ Unknown file type for Zoom recording: "{filetype}"')
+                print('      Nothing uploaded for this file.')
+                continue
+
+        if upload_name:
+            media_type = MEDIA_TYPE_FOR_EXTENSION.get(extension)
+            if not media_type:
+                raise ValueError(f'No known media type for file extension "{extension}"')
+
+            filepath = download_zoom_file(zoom_client, download_url, tempdir)
+            print(f'    Uploading {filepath}\n      {upload_name=}')
+            if not dry_run:
+                file_info = {'name': upload_name, 'parents': [meeting_folder['id']]}
+                media = MediaFileUpload(filepath, mimetype=media_type, resumable=True)
+                file = (
+                    client.files()
+                    .create(body=file_info, media_body=media, fields="id")
+                    .execute()
+                )
 
 
 def main():
@@ -269,7 +356,7 @@ def main():
                              'Can be an ISO date or time ("2025-01-01") or a '
                              'number of days/hours/minutes ago ("5d" = 5 days '
                              'ago) or from now ("+5d" = 5 days from now).')
-    parser.add_argument('service', choices=('gdrive', 'youtube'),
+    parser.add_argument('--service', choices=('gdrive', 'youtube'),
                         default='gdrive',
                         help='Which service to upload recordings to.')
     args = parser.parse_args()
@@ -278,15 +365,17 @@ def main():
     if dry_run:
         print('⚠️ This is a dry run! Videos will not actually be uploaded.\n')
 
-    if args.service == 'gdrive':
-        upload_client = get_gdrive_client()
-        valid = validate_gdrive_credentials(upload_client)
-    elif args.service == 'youtube':
-        upload_client = get_youtube_client()
-        valid = validate_youtube_credentials(upload_client)
-    else:
-        print(f'Unknown service type: "{args.service}"')
-        return sys.exit(1)
+    match args.service:
+        case 'gdrive':
+            upload_client = get_gdrive_client()
+            valid = validate_gdrive_credentials(upload_client)
+        case 'youtube':
+            upload_client = get_youtube_client()
+            valid = validate_youtube_credentials(upload_client)
+        case _:
+            print(f'Unknown service type: "{args.service}"')
+            return sys.exit(1)
+
     if not valid:
         print(f'The credentials for {args.service} were not valid!')
         print('Please use `python scripts/auth.py` to re-authorize.')
@@ -352,7 +441,7 @@ def main():
 
                 if video_has_audio(filepath):
                     if args.service == 'gdrive':
-                        save_to_gdrive(upload_client, meeting, filepath, dry_run)
+                        save_to_gdrive(upload_client, meeting, filepath, dry_run, zoom, tmpdirname)
                     elif args.service == 'youtube':
                         save_to_youtube(upload_client, meeting, filepath, dry_run)
                 else:
