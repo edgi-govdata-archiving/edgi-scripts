@@ -1,13 +1,9 @@
 name: Upload Zoom Recordings to YouTube
 
 on:
-  # EDGI AC no longer wishes to upload all recordings publicly to YouTube, so this is disabled for now!
-  # We plan to switch to uploading to a private Google Drive for EDGI members instead, at which point
-  # this should be turned back on.
-  #
-  # schedule:
-  #   # 10 minutes after every hour on weekdays
-  #   - cron: "10 * * * 1-5"
+  schedule:
+    # 10 minutes after every hour on weekdays
+    - cron: "10 * * * 1-5"
 
   workflow_dispatch:
     inputs:
@@ -58,6 +54,8 @@ jobs:
         run: |
           openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in client_secret.json.enc -out client_secret.json -d -md sha256
           openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .youtube-upload-credentials.json.enc -out .youtube-upload-credentials.json -d -md sha256
+          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in .gdrive-upload-credentials.json.enc -out .gdrive-upload-credentials.json -d -md sha256
+          openssl aes-256-cbc -k "$EDGI_ZOOM_API_SECRET" -in gdrive-locations.json.enc -out gdrive-locations.json -d -md sha256
 
       - name: Upload
         env:

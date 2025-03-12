@@ -43,3 +43,13 @@ VIDEO_CATEGORY_IDS = {
     'Shows': 43,
     'Trailers': 44,
 }
+
+# Zoom gives us file extensions, so we have to keep track of the correct media
+# type ourselves (when downloading from Zoom, you just get a generic
+# 'application/octet-stream' Content-Type header, too).
+MEDIA_TYPE_FOR_EXTENSION = {
+    'm4a': 'audio/mp4',
+    'mp4': 'video/mp4',
+    'txt': 'text/plain',
+    'vtt': 'text/vtt',
+}

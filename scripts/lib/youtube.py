@@ -37,6 +37,7 @@ RETRIABLE_STATUS_CODES = [500, 502, 503, 504]
 # This OAuth 2.0 access scope allows an application to upload files to the
 # authenticated user's YouTube channel, but doesn't allow other types of access.
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube.force-ssl']
+DEFAULT_CREDENTIALS_FILE = '.youtube-upload-credentials.json'
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
@@ -54,7 +55,7 @@ def parse_youtube_http_error(error):
 
     See how the error class handles parsing here:
     https://github.com/googleapis/google-api-python-client/blob/41144858a766d2a2216af3aaa94c4aa7cd6fbe30/googleapiclient/errors.py#L47-L67
-    
+
     Oddly, it doesn't match up with the format of YouTube errors here:
     https://developers.google.com/youtube/v3/docs/core_errors
     """
@@ -72,17 +73,17 @@ def parse_youtube_http_error(error):
         return None
 
 # Create client from stored authorization credentials.
-def get_youtube_client(credentials_path):
+def get_youtube_client(credentials_path = DEFAULT_CREDENTIALS_FILE):
     credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(credentials_path)
-    try: 
+    try:
         return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
     except UnknownApiNameOrVersion:
         pass
-    try: 
+    try:
         json_path = 'youtube-api-rest.json'
         with open(path_json) as f:
             service = json.load(f)
-        
+
         return build_from_document(service, credentials = credentials)
     except:
         raise
@@ -171,13 +172,13 @@ def resumable_upload(request):
                 raise
         except RETRIABLE_EXCEPTIONS as e:
             error = 'A retriable error occurred: %s' % e
-  
+
         if error is not None:
             debug(error)
             retry += 1
             if retry > MAX_RETRIES:
                 raise ValueError(error)
-    
+
             max_sleep = 2 ** retry
             sleep_seconds = random.random() * max_sleep
             debug('Sleeping %f seconds and then retrying...' % sleep_seconds)
@@ -194,7 +195,7 @@ def find_playlist_id(youtube, title):
     playlists = youtube.playlists()
     request = playlists.list(mine=True, part="id,snippet")
     current_encoding = locale.getpreferredencoding()
-    
+
     while request:
         results = request.execute()
         for item in results["items"]:
@@ -249,10 +250,9 @@ def add_video_to_existing_playlist(youtube, playlist_id, video_id):
 
 def add_video_to_playlist(youtube, video_id, title, privacy="unlisted"):
     """Add video to playlist (by title) and return the full response."""
-    playlist_id = (find_playlist_id(youtube, title) or 
+    playlist_id = (find_playlist_id(youtube, title) or
                    create_playlist(youtube, title, privacy))
     if playlist_id:
         return add_video_to_existing_playlist(youtube, playlist_id, video_id)
     else:
         debug("Error adding video to playlist")
-        

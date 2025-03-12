@@ -1,8 +1,15 @@
-.env
-client_secret.json
-.youtube-upload-credentials.json
-*.mp4
 __pycache__/
-scratch.*
 .DS_Store
 .vscode
+
+scratch.*
+*.mp4
+
+# Stores environment variables and sensitive info.
+.env
+
+# Decrypted versions of files that must be stored *encrypted* in the repo.
+client_secret.json
+.youtube-upload-credentials.json
+.gdrive-upload-credentials.json
+gdrive-locations.json

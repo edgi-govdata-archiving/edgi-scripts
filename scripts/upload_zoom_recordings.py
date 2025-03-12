@@ -28,6 +28,7 @@
 from argparse import ArgumentParser
 from datetime import datetime, date, timedelta, timezone
 import dateutil.parser
+import json
 import os
 import re
 import requests
@@ -36,11 +37,12 @@ import sys
 import tempfile
 from typing import Dict
 from urllib.parse import urlparse
+from googleapiclient.http import MediaFileUpload
 from zoomus import ZoomClient
-from lib.constants import VIDEO_CATEGORY_IDS, ZOOM_ROLES
+from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
+from lib.gdrive import get_gdrive_client, validate_gdrive_credentials
 
-YOUTUBE_CREDENTIALS_PATH = '.youtube-upload-credentials.json'
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
 ZOOM_ACCOUNT_ID = os.environ['EDGI_ZOOM_ACCOUNT_ID']
@@ -193,6 +195,155 @@ def cli_datetime(datetime_string) -> datetime:
         return parsed.astimezone(timezone.utc)
 
 
+def save_to_youtube(youtube, meeting: dict, filepath: str, dry_run: bool) -> None:
+    recording_date = fix_date(meeting['start_time'])
+    title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
+
+    print(f'    Uploading {filepath}\n      {title=}\n      {recording_date=}')
+    if not dry_run:
+        video_id = upload_video(youtube,
+                                filepath,
+                                title=title,
+                                category=VIDEO_CATEGORY_IDS["Science & Technology"],
+                                license=DEFAULT_VIDEO_LICENSE,
+                                recording_date=recording_date,
+                                privacy_status='unlisted')
+
+    # Add all videos to default playlist
+    print('    Adding to main playlist: Uploads from Zoom')
+    if not dry_run:
+        add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
+
+    # Add to additional playlists
+    playlist_name = ''
+    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
+        playlist_name = 'Website Monitoring'
+
+    if 'data together' in meeting['topic'].lower():
+        playlist_name = 'Data Together'
+
+    if 'community call' in meeting['topic'].lower():
+        playlist_name = 'Community Calls'
+
+    if 'edgi introductions' in meeting['topic'].lower():
+        playlist_name = 'EDGI Introductions'
+
+    if 'all-edgi' in meeting['topic'].lower():
+        playlist_name = 'All-EDGI Meetings'
+
+    if playlist_name:
+        print(f'    Adding to call playlist: {playlist_name}')
+        if not dry_run:
+            add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
+
+    # TODO: save the chat log transcript in a comment on the video.
+
+
+def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
+                   zoom_client: ZoomClient, tempdir: str) -> None:
+    recording_date = dateutil.parser.isoparse(meeting['start_time'])
+
+    with open('gdrive-locations.json') as file:
+        location_options = json.load(file)
+
+    topic = meeting['topic']
+    if re.search(r'\bac meeting', topic, flags=re.IGNORECASE):
+        location = location_options['ac']
+    elif re.search(r'\beew\b', topic, flags=re.IGNORECASE):
+        location = location_options['eew']
+    elif 'all-edgi' in topic.lower():
+        location = location_options['all_edgi']
+    else:
+        location = location_options['default']
+
+    folder_id = location['folder']
+    folder_mime_type = 'application/vnd.google-apps.folder'
+    if location['subfolder_pattern']:
+        parent = location['folder']
+        subfolder_name = location['subfolder_pattern'].format(year=recording_date.year)
+        # You can't just list a folder's files -- there is only search.
+        # Docs: https://developers.google.com/drive/api/guides/search-files
+        result = client.files().list(
+            q=f"'{parent}' in parents and mimeType = '{folder_mime_type}' and name = '{subfolder_name}'",
+            fields="nextPageToken, files(id, name)",
+        ).execute()
+        if len(result['files']):
+            folder_id = result['files'][0]['id']
+        else:
+            print(f'    Creating year folder "{subfolder_name}"...')
+            if not dry_run:
+                subfolder_info = {
+                    'name': subfolder_name,
+                    'mimeType': folder_mime_type,
+                    'parents': [parent],
+                }
+                subfolder_object = client.files().create(body=subfolder_info, fields="id").execute()
+                folder_id = subfolder_object['id']
+
+    iso_date = recording_date.strftime('%Y-%m-%d')
+    meeting_name = f'{iso_date} {topic}'
+    print(f'    Creating meeting folder "{meeting_name}" in https://drive.google.com/drive/folders/{folder_id} ...')
+    if not dry_run:
+        meeting_folder_info = {
+            'name': meeting_name,
+            'mimeType': folder_mime_type,
+            'parents': [folder_id],
+        }
+        meeting_folder = client.files().create(body=meeting_folder_info, fields="id").execute()
+
+    # Upload files to folder_id
+    upload_name = f'{meeting_name}.mp4'
+    print(f'    Uploading {filepath}\n      {upload_name=}')
+    if not dry_run:
+        # TODO: improve resumability by following the suggestions around error
+        # handling at the end of this doc:
+        # https://github.com/googleapis/google-api-python-client/blob/main/docs/media.md
+        file_info = {'name': f'{meeting_name}.mp4', 'parents': [meeting_folder['id']]}
+        media = MediaFileUpload(filepath, mimetype='video/mp4', resumable=True)
+        file = (
+            client.files()
+            .create(body=file_info, media_body=media, fields="id")
+            .execute()
+        )
+
+    for file in meeting['recording_files']:
+        download_url = file['download_url']
+        extension = file['file_extension'].lower()
+        upload_name = None
+        file_info = None
+        match file['file_type'].lower():
+            case 'mp4':
+                # We are already handling this file; nothing to do here.
+                pass
+            case 'm4a':
+                upload_name = f'{meeting_name} (audio).{extension}'
+            case 'chat':
+                upload_name = f'{meeting_name} (chat).{extension}'
+            case 'cc':
+                upload_name = f'{meeting_name} (transcript).{extension}'
+            case filetype:
+                # Print warning about unknown file type
+                print(f'    ⚠️ Unknown file type for Zoom recording: "{filetype}"')
+                print('      Nothing uploaded for this file.')
+                continue
+
+        if upload_name:
+            media_type = MEDIA_TYPE_FOR_EXTENSION.get(extension)
+            if not media_type:
+                raise ValueError(f'No known media type for file extension "{extension}"')
+
+            filepath = download_zoom_file(zoom_client, download_url, tempdir)
+            print(f'    Uploading {filepath}\n      {upload_name=}')
+            if not dry_run:
+                file_info = {'name': upload_name, 'parents': [meeting_folder['id']]}
+                media = MediaFileUpload(filepath, mimetype=media_type, resumable=True)
+                file = (
+                    client.files()
+                    .create(body=file_info, media_body=media, fields="id")
+                    .execute()
+                )
+
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('--dry-run', action='store_true', help='Do not upload recordings.')
@@ -208,15 +359,28 @@ def main():
                              'Can be an ISO date or time ("2025-01-01") or a '
                              'number of days/hours/minutes ago ("5d" = 5 days '
                              'ago) or from now ("+5d" = 5 days from now).')
+    parser.add_argument('--service', choices=('gdrive', 'youtube'),
+                        default='gdrive',
+                        help='Which service to upload recordings to.')
     args = parser.parse_args()
 
     dry_run = args.dry_run or DRY_RUN
     if dry_run:
         print('⚠️ This is a dry run! Videos will not actually be uploaded.\n')
 
-    youtube = get_youtube_client(YOUTUBE_CREDENTIALS_PATH)
-    if not validate_youtube_credentials(youtube):
-        print(f'The credentials in {YOUTUBE_CREDENTIALS_PATH} were not valid!')
+    match args.service:
+        case 'gdrive':
+            upload_client = get_gdrive_client()
+            valid = validate_gdrive_credentials(upload_client)
+        case 'youtube':
+            upload_client = get_youtube_client()
+            valid = validate_youtube_credentials(upload_client)
+        case _:
+            print(f'Unknown service type: "{args.service}"')
+            return sys.exit(1)
+
+    if not valid:
+        print(f'The credentials for {args.service} were not valid!')
         print('Please use `python scripts/auth.py` to re-authorize.')
         return sys.exit(1)
 
@@ -261,6 +425,7 @@ def main():
                         print(f'  ❌ {ZoomError(response)}')
                 continue
 
+            # FIXME: we now want to upload all files to gdrive
             videos = [file for file in meeting['recording_files']
                       if file['file_type'].lower() == 'mp4']
 
@@ -278,47 +443,10 @@ def main():
                 filepath = download_zoom_file(zoom, url, tmpdirname)
 
                 if video_has_audio(filepath):
-                    recording_date = fix_date(meeting['start_time'])
-                    title = f'{meeting["topic"]} - {pretty_date(meeting["start_time"])}'
-
-                    print(f'    Uploading {filepath}\n      {title=}\n      {recording_date=}')
-                    if not dry_run:
-                        video_id = upload_video(youtube,
-                                                filepath,
-                                                title=title,
-                                                category=VIDEO_CATEGORY_IDS["Science & Technology"],
-                                                license=DEFAULT_VIDEO_LICENSE,
-                                                recording_date=recording_date,
-                                                privacy_status='unlisted')
-
-                    # Add all videos to default playlist
-                    print('    Adding to main playlist: Uploads from Zoom')
-                    if not dry_run:
-                        add_video_to_playlist(youtube, video_id, title=DEFAULT_YOUTUBE_PLAYLIST, privacy='unlisted')
-
-                    # Add to additional playlists
-                    playlist_name = ''
-                    if any(x in meeting['topic'].lower() for x in ['web mon', 'website monitoring', 'wm']):
-                        playlist_name = 'Website Monitoring'
-
-                    if 'data together' in meeting['topic'].lower():
-                        playlist_name = 'Data Together'
-
-                    if 'community call' in meeting['topic'].lower():
-                        playlist_name = 'Community Calls'
-
-                    if 'edgi introductions' in meeting['topic'].lower():
-                        playlist_name = 'EDGI Introductions'
-
-                    if 'all-edgi' in meeting['topic'].lower():
-                        playlist_name = 'All-EDGI Meetings'
-
-                    if playlist_name:
-                        print(f'    Adding to call playlist: {playlist_name}')
-                        if not dry_run:
-                            add_video_to_playlist(youtube, video_id, title=playlist_name, privacy='unlisted')
-
-                    # TODO: save the chat log transcript in a comment on the video.
+                    if args.service == 'gdrive':
+                        save_to_gdrive(upload_client, meeting, filepath, dry_run, zoom, tmpdirname)
+                    elif args.service == 'youtube':
+                        save_to_youtube(upload_client, meeting, filepath, dry_run)
                 else:
                     print('    Skipping upload: video was silent (no mics were on).')
 
