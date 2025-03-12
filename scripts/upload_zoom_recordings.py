@@ -39,6 +39,7 @@ from typing import Dict
 from urllib.parse import urlparse
 from googleapiclient.http import MediaFileUpload
 from zoomus import ZoomClient
+from zoomus.util import encode_uuid
 from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 from lib.gdrive import get_gdrive_client, validate_gdrive_credentials
@@ -418,7 +419,7 @@ def main():
             if meeting_had_no_participants(zoom, meeting):
                 print('  Deleting recording: nobody attended this meeting.')
                 if not dry_run:
-                    response = zoom.recording.delete(meeting_id=meeting['uuid'], action='trash')
+                    response = zoom.recording.delete(meeting_id=encode_uuid(meeting['uuid']), action='trash')
                     if response.status_code < 300:
                         print('  🗑️ Deleted recording.')
                     else:
@@ -453,7 +454,7 @@ def main():
                 if ZOOM_DELETE_AFTER_UPLOAD and not dry_run:
                     # Just delete the video for now, since that takes the most storage space.
                     response = zoom.recording.delete_single_recording(
-                        meeting_id=file['meeting_id'],
+                        meeting_id=encode_uuid(file['meeting_id']),
                         recording_id=file['id'],
                         action='trash'
                     )
