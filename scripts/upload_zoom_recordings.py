@@ -188,7 +188,7 @@ def save_to_youtube(youtube, meeting: dict, filepath: str, dry_run: bool) -> Non
 
 
 def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
-                   zoom_client: ZoomClient, tempdir: str) -> None:
+                   zoom_client: FancyZoom, tempdir: str) -> None:
     recording_date = dateutil.parser.isoparse(meeting['start_time'])
 
     with open('gdrive-locations.json') as file:
