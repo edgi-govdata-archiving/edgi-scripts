@@ -42,7 +42,7 @@ from zoomus import ZoomClient
 from zoomus.util import encode_uuid
 from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
-from lib.gdrive import get_gdrive_client, validate_gdrive_credentials
+from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder
 
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
@@ -258,39 +258,16 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
         location = location_options['default']
 
     folder_id = location['folder']
-    folder_mime_type = 'application/vnd.google-apps.folder'
     if location['subfolder_pattern']:
-        parent = location['folder']
         subfolder_name = location['subfolder_pattern'].format(year=recording_date.year)
-        # You can't just list a folder's files -- there is only search.
-        # Docs: https://developers.google.com/drive/api/guides/search-files
-        result = client.files().list(
-            q=f"'{parent}' in parents and mimeType = '{folder_mime_type}' and name = '{subfolder_name}'",
-            fields="nextPageToken, files(id, name)",
-        ).execute()
-        if len(result['files']):
-            folder_id = result['files'][0]['id']
-        else:
-            print(f'    Creating year folder "{subfolder_name}"...')
-            if not dry_run:
-                subfolder_info = {
-                    'name': subfolder_name,
-                    'mimeType': folder_mime_type,
-                    'parents': [parent],
-                }
-                subfolder_object = client.files().create(body=subfolder_info, fields="id").execute()
-                folder_id = subfolder_object['id']
+        if not dry_run:
+            folder_id = ensure_folder(client, location['folder'], subfolder_name)
 
     iso_date = recording_date.strftime('%Y-%m-%d')
     meeting_name = f'{iso_date} {topic}'
     print(f'    Creating meeting folder "{meeting_name}" in https://drive.google.com/drive/folders/{folder_id} ...')
     if not dry_run:
-        meeting_folder_info = {
-            'name': meeting_name,
-            'mimeType': folder_mime_type,
-            'parents': [folder_id],
-        }
-        meeting_folder = client.files().create(body=meeting_folder_info, fields="id").execute()
+        meeting_folder = ensure_folder(client, folder_id, meeting_name)
 
     # Upload files to folder_id
     upload_name = f'{meeting_name}.mp4'
