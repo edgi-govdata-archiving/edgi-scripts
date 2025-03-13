@@ -59,3 +59,13 @@ def ensure_folder(client, parent: str, name: str) -> str:
     }
     subfolder = client.files().create(body=info, fields="id").execute()
     return subfolder['id']
+
+
+def is_trashed(client, file_id: str) -> bool:
+    """
+    Determine if a file/folder is in the trash.
+    There is a weird edge case this does *not* account for: if a file is added
+    to a folder *after* the folder was put in the trash, the file is not marked
+    as trashed (even though it effectivly is... I think).
+    """
+    return client.files().get(fileId=file_id, fields='id, trashed')['trashed']

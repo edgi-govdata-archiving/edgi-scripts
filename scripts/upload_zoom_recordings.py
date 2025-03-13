@@ -42,7 +42,7 @@ from zoomus import ZoomClient
 from zoomus.util import encode_uuid
 from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
-from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder
+from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder, is_trashed
 
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
@@ -258,6 +258,9 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
         location = location_options['default']
 
     folder_id = location['folder']
+    if is_trashed(client, folder_id):
+        raise RuntimeError(f'Cannot upload to GDrive folder "{folder_id}"; it is in the trash!')
+
     if location['subfolder_pattern']:
         subfolder_name = location['subfolder_pattern'].format(year=recording_date.year)
         if not dry_run:
