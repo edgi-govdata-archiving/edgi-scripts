@@ -68,4 +68,4 @@ def is_trashed(client, file_id: str) -> bool:
     to a folder *after* the folder was put in the trash, the file is not marked
     as trashed (even though it effectivly is... I think).
     """
-    return client.files().get(fileId=file_id, fields='id, trashed')['trashed']
+    return client.files().get(fileId=file_id, fields='id, trashed').execute()['trashed']
