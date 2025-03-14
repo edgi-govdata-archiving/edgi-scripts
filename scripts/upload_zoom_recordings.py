@@ -279,7 +279,7 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
         # TODO: improve resumability by following the suggestions around error
         # handling at the end of this doc:
         # https://github.com/googleapis/google-api-python-client/blob/main/docs/media.md
-        file_info = {'name': f'{meeting_name}.mp4', 'parents': [meeting_folder['id']]}
+        file_info = {'name': f'{meeting_name}.mp4', 'parents': [meeting_folder]}
         media = MediaFileUpload(filepath, mimetype='video/mp4', resumable=True)
         file = (
             client.files()
@@ -316,7 +316,7 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
             filepath = download_zoom_file(zoom_client, download_url, tempdir)
             print(f'    Uploading {filepath}\n      {upload_name=}')
             if not dry_run:
-                file_info = {'name': upload_name, 'parents': [meeting_folder['id']]}
+                file_info = {'name': upload_name, 'parents': [meeting_folder]}
                 media = MediaFileUpload(filepath, mimetype=media_type, resumable=True)
                 file = (
                     client.files()
