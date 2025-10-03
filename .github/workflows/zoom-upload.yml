@@ -1,9 +1,10 @@
 name: Upload Zoom Recordings to YouTube
 
 on:
-  schedule:
-    # 10 minutes after every hour on weekdays
-    - cron: "10 * * * 1-5"
+  # TEMPORARILY DISABLED DURING GDRIVE MIGRATION, 2025-10-03 - 2025-10-05
+  # schedule:
+  #   # 10 minutes after every hour on weekdays
+  #   - cron: "10 * * * 1-5"
 
   workflow_dispatch:
     inputs:
