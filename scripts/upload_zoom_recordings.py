@@ -36,7 +36,7 @@ import subprocess
 import sys
 import tempfile
 from typing import Dict
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 from googleapiclient.http import MediaFileUpload
 from zoomus import ZoomClient
 from zoomus.util import encode_uuid
@@ -121,7 +121,7 @@ def download_zoom_file(client: ZoomClient, url: str, download_directory: str) ->
     })
     r.raise_for_status()
     resolved_url = r.url
-    filename = urlparse(resolved_url).path.split('/')[-1]
+    filename = os.path.basename(urlsplit(resolved_url).path)
     filepath = os.path.join(download_directory, filename)
     if os.path.exists(filepath):
         r.close()
