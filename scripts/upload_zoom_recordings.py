@@ -260,7 +260,7 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
             if not media_type:
                 raise ValueError(f'No known media type for file extension "{extension}"')
 
-            filepath = download_zoom_file(zoom_client, download_url, tempdir)
+            filepath = zoom_client.download_file(download_url, tempdir)
             print(f'    Uploading {filepath}\n      {upload_name=}')
             if not dry_run:
                 file_info = {'name': upload_name, 'parents': [meeting_folder]}
