@@ -31,18 +31,17 @@ import dateutil.parser
 import json
 import os
 import re
-import requests
 import subprocess
 import sys
 import tempfile
 from typing import Dict
 from urllib.parse import urlsplit
 from googleapiclient.http import MediaFileUpload
-from zoomus import ZoomClient
 from zoomus.util import encode_uuid
 from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder, is_trashed
+from lib.zoom import FancyZoom, ZoomError
 
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
@@ -70,35 +69,6 @@ ZOOM_DELETE_AFTER_UPLOAD = is_truthy(os.environ.get('EDGI_ZOOM_DELETE_AFTER_UPLO
 DRY_RUN = is_truthy(os.environ.get('EDGI_DRY_RUN', ''))
 
 
-class ZoomError(Exception):
-    def __init__(self, response, message=None):
-        try:
-            data = response.json()
-        except Exception:
-            data = {}
-
-        if not message:
-            message = data.pop('message', 'Zoom API error!')
-
-        data['http_status'] = response.status_code
-        full_message = f'{message} ({data!r}) Check the docs for details: https://developers.zoom.us/docs/api/.'
-        super().__init__(full_message)
-
-    @classmethod
-    def is_error(cls, response):
-        return response.status_code >= 400
-
-    @classmethod
-    def raise_if_error(cls, response, message=None):
-        if cls.is_error(response):
-            raise cls(response, message)
-
-    @classmethod
-    def parse_or_raise(cls, response, message=None) -> Dict:
-        cls.raise_if_error(response, message)
-        return response.json()
-
-
 def fix_date(date_string: str) -> str:
     date = date_string
     index = date.find('Z')
@@ -111,31 +81,8 @@ def pretty_date(date_string: str) -> str:
     return datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ').strftime('%b %-d, %Y')
 
 
-def download_zoom_file(client: ZoomClient, url: str, download_directory: str) -> str:
-    # Note the token info in the client isn't really *public*, but it's
-    # not explicitly private, either. Use `config[]` syntax instead of
-    # `config.get()` so we get an exception if things have changed and
-    # this data is no longer available.
-    r = requests.get(url, stream=True, headers={
-        'Authorization': f'Bearer {client.config['token']}'
-    })
-    r.raise_for_status()
-    resolved_url = r.url
-    filename = os.path.basename(urlsplit(resolved_url).path)
-    filepath = os.path.join(download_directory, filename)
-    if os.path.exists(filepath):
-        r.close()
-        return
-    with open(filepath, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                f.write(chunk)
-
-    return filepath
-
-
-def meeting_had_no_participants(client: ZoomClient, meeting: Dict) -> bool:
-    participants = ZoomError.parse_or_raise(client.past_meeting.get_participants(meeting_id=meeting['uuid']))['participants']
+def meeting_had_no_participants(client: FancyZoom, meeting: Dict) -> bool:
+    participants = client.past_meeting.get_participants(meeting_id=meeting['uuid'])['participants']
 
     return all(
         any(p.search(u['name']) for p in ZOOM_IGNORE_USER_NAMES)
@@ -241,7 +188,7 @@ def save_to_youtube(youtube, meeting: dict, filepath: str, dry_run: bool) -> Non
 
 
 def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
-                   zoom_client: ZoomClient, tempdir: str) -> None:
+                   zoom_client: FancyZoom, tempdir: str) -> None:
     recording_date = dateutil.parser.isoparse(meeting['start_time'])
 
     with open('gdrive-locations.json') as file:
@@ -313,7 +260,7 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
             if not media_type:
                 raise ValueError(f'No known media type for file extension "{extension}"')
 
-            filepath = download_zoom_file(zoom_client, download_url, tempdir)
+            filepath = zoom_client.download_file(download_url, tempdir)
             print(f'    Uploading {filepath}\n      {upload_name=}')
             if not dry_run:
                 file_info = {'name': upload_name, 'parents': [meeting_folder]}
@@ -365,21 +312,21 @@ def main():
         print('Please use `python scripts/auth.py` to re-authorize.')
         return sys.exit(1)
 
-    zoom = ZoomClient(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, ZOOM_ACCOUNT_ID)
+    zoom = FancyZoom(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, ZOOM_ACCOUNT_ID)
 
     # Official meeting recordings we will upload belong to the account owner.
-    zoom_user_id = zoom.user.list(role_id=ZOOM_ROLES['owner']).json()['users'][0]['id']
+    zoom_user_id = zoom.user.list(role_id=ZOOM_ROLES['owner'])['users'][0]['id']
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         print(f'Creating tmp dir: {tmpdirname}\n')
 
         print('Looking for videos to upload between '
               f'{args.from_time} and {args.to_time}...')
-        meetings = ZoomError.parse_or_raise(zoom.recording.list(
+        meetings = zoom.recording.list(
             user_id=zoom_user_id,
             start=args.from_time,
             end=args.to_time
-        ))['meetings']
+        )['meetings']
         meetings = sorted(meetings, key=lambda m: m['start_time'])
         # Filter recordings less than 1 minute
         meetings = filter(lambda m: m['duration'] > 1, meetings)
@@ -399,11 +346,11 @@ def main():
             if meeting_had_no_participants(zoom, meeting):
                 print('  Deleting recording: nobody attended this meeting.')
                 if not dry_run:
-                    response = zoom.recording.delete(meeting_id=encode_uuid(meeting['uuid']), action='trash')
-                    if response.status_code < 300:
+                    try:
+                        zoom.recording.delete(meeting_id=encode_uuid(meeting['uuid']), action='trash')
                         print('  🗑️ Deleted recording.')
-                    else:
-                        print(f'  ❌ {ZoomError(response)}')
+                    except ZoomError as error:
+                        print(f'  ❌ {error}')
                 continue
 
             # FIXME: we now want to upload all files to gdrive
@@ -421,7 +368,7 @@ def main():
             for file in videos:
                 url = file['download_url']
                 print(f'    Download from {url}...')
-                filepath = download_zoom_file(zoom, url, tmpdirname)
+                filepath = zoom.download_file(url, tmpdirname)
 
                 if video_has_audio(filepath):
                     if args.service == 'gdrive':
@@ -433,15 +380,15 @@ def main():
 
                 if ZOOM_DELETE_AFTER_UPLOAD and not dry_run:
                     # Just delete the video for now, since that takes the most storage space.
-                    response = zoom.recording.delete_single_recording(
-                        meeting_id=encode_uuid(file['meeting_id']),
-                        recording_id=file['id'],
-                        action='trash'
-                    )
-                    if response.status_code == 204:
+                    try:
+                        zoom.recording.delete_single_recording(
+                            meeting_id=encode_uuid(file['meeting_id']),
+                            recording_id=file['id'],
+                            action='trash'
+                        )
                         print(f'  🗑️ Deleted {file["file_type"]} file from Zoom for recording: {meeting["topic"]}')
-                    else:
-                        print(f'  ❌ {ZoomError(response)}')
+                    except ZoomError as error:
+                        print(f'  ❌ {error}')
 
 
 if __name__ == '__main__':
