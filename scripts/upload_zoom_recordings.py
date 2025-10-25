@@ -37,12 +37,11 @@ import sys
 import tempfile
 from typing import Dict
 from urllib.parse import urlsplit
-from googleapiclient.http import MediaFileUpload
 from zoomus import ZoomClient
 from zoomus.util import encode_uuid
 from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
-from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder, is_trashed
+from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder, is_trashed, upload_file
 
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
@@ -276,22 +275,18 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
     upload_name = f'{meeting_name}.mp4'
     print(f'    Uploading {filepath}\n      {upload_name=}')
     if not dry_run:
-        # TODO: improve resumability by following the suggestions around error
-        # handling at the end of this doc:
-        # https://github.com/googleapis/google-api-python-client/blob/main/docs/media.md
-        file_info = {'name': f'{meeting_name}.mp4', 'parents': [meeting_folder]}
-        media = MediaFileUpload(filepath, mimetype='video/mp4', resumable=True)
-        file = (
-            client.files()
-            .create(body=file_info, media_body=media, fields="id")
-            .execute()
+        upload_file(
+            client,
+            filepath,
+            folder_id=meeting_folder,
+            name=f'{meeting_name}.mp4',
+            media_type='video/mp4',
         )
 
     for file in meeting['recording_files']:
         download_url = file['download_url']
         extension = file['file_extension'].lower()
         upload_name = None
-        file_info = None
         match file['file_type'].lower():
             case 'mp4':
                 # We are already handling this file; nothing to do here.
@@ -309,6 +304,9 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
                 continue
 
         if upload_name:
+            # TODO: The upload command can guess based on file extension; it
+            # does the right thing for all but ".m4a", and maybe that's OK
+            # enough. Consider dropping this.
             media_type = MEDIA_TYPE_FOR_EXTENSION.get(extension)
             if not media_type:
                 raise ValueError(f'No known media type for file extension "{extension}"')
@@ -316,12 +314,12 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
             filepath = download_zoom_file(zoom_client, download_url, tempdir)
             print(f'    Uploading {filepath}\n      {upload_name=}')
             if not dry_run:
-                file_info = {'name': upload_name, 'parents': [meeting_folder]}
-                media = MediaFileUpload(filepath, mimetype=media_type, resumable=True)
-                file = (
-                    client.files()
-                    .create(body=file_info, media_body=media, fields="id")
-                    .execute()
+                upload_file(
+                    client,
+                    filepath,
+                    folder_id=meeting_folder,
+                    name=upload_name,
+                    media_type=media_type,
                 )
 
 
