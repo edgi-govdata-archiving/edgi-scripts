@@ -283,7 +283,12 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
         media = MediaFileUpload(filepath, mimetype='video/mp4', resumable=True)
         file = (
             client.files()
-            .create(body=file_info, media_body=media, fields="id")
+            .create(
+                body=file_info,
+                media_body=media,
+                fields="id",
+                supportsAllDrives=True
+            )
             .execute()
         )
 
@@ -320,7 +325,12 @@ def save_to_gdrive(client, meeting: dict, filepath: str, dry_run: bool,
                 media = MediaFileUpload(filepath, mimetype=media_type, resumable=True)
                 file = (
                     client.files()
-                    .create(body=file_info, media_body=media, fields="id")
+                    .create(
+                        body=file_info,
+                        media_body=media,
+                        fields="id",
+                        supportsAllDrives=True,
+                    )
                     .execute()
                 )
 

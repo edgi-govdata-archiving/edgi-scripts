@@ -48,6 +48,8 @@ def ensure_folder(client, parent: str, name: str) -> str:
     found = client.files().list(
         q=f"'{parent}' in parents and mimeType = '{FOLDER_MIME_TYPE}' and name = '{name}' and trashed = false",
         fields="nextPageToken, files(id, name)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True,
     ).execute()
     if len(found['files']):
         return found['files'][0]['id']
@@ -57,7 +59,11 @@ def ensure_folder(client, parent: str, name: str) -> str:
         'mimeType': FOLDER_MIME_TYPE,
         'parents': [parent],
     }
-    subfolder = client.files().create(body=info, fields="id").execute()
+    subfolder = client.files().create(
+        body=info,
+        fields="id",
+        supportsAllDrives=True,
+    ).execute()
     return subfolder['id']
 
 
@@ -68,4 +74,8 @@ def is_trashed(client, file_id: str) -> bool:
     to a folder *after* the folder was put in the trash, the file is not marked
     as trashed (even though it effectivly is... I think).
     """
-    return client.files().get(fileId=file_id, fields='id, trashed').execute()['trashed']
+    return client.files().get(
+        fileId=file_id,
+        fields='id, trashed',
+        supportsAllDrives=True
+    ).execute()['trashed']
