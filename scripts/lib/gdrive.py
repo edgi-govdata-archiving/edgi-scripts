@@ -1,6 +1,8 @@
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 from google.auth.exceptions import GoogleAuthError
+from os.path import basename
 
 
 # This OAuth 2.0 access scope allows an application to upload files to the
@@ -79,3 +81,32 @@ def is_trashed(client, file_id: str) -> bool:
         fields='id, trashed',
         supportsAllDrives=True
     ).execute()['trashed']
+
+
+def upload_file(client, file: str, folder_id: str, name: str | None = None, media_type: str | None = None) -> str:
+    """
+    Upload a file on disk to a folder in Google Drive. Returns the ID of the
+    created file.
+    """
+    if not name:
+        name = basename(file)
+    if not name:
+        raise ValueError('Could not determine filename from `file` argument')
+
+    file_info = {'name': name, 'parents': [folder_id]}
+    media = MediaFileUpload(file, mimetype=media_type, resumable=True)
+
+    # TODO: improve resumability by following the suggestions around error
+    # handling at the end of this doc:
+    # https://github.com/googleapis/google-api-python-client/blob/main/docs/media.md
+    drive_file = (
+        client.files()
+        .create(
+            body=file_info,
+            media_body=media,
+            fields='id',
+            supportsAllDrives=True,
+        )
+        .execute()
+    )
+    return drive_file['id']
