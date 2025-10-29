@@ -1,9 +1,3 @@
-USER_TYPES = {
-    'basic': 1,
-    'pro': 2,
-    'corp': 3,
-}
-
 VIDEO_CATEGORY_IDS = {
     'Film & Animation': 1,
     'Autos & Vehicles': 2,
