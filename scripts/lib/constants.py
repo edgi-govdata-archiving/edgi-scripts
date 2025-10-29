@@ -4,12 +4,6 @@ USER_TYPES = {
     'corp': 3,
 }
 
-ZOOM_ROLES = {
-    'owner': 0,
-    'admin': 1,
-    'member': 2,
-}
-
 VIDEO_CATEGORY_IDS = {
     'Film & Animation': 1,
     'Autos & Vehicles': 2,

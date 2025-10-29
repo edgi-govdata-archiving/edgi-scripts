@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum, StrEnum, auto
 import os.path
 import requests
 from requests import Response
@@ -23,6 +23,16 @@ class RecordingStatus(Enum):
                 return RecordingStatus.PROCESSING
 
         return RecordingStatus.READY
+
+
+class ZoomRole(StrEnum):
+    """
+    Built-in user roles for Zoom. Accounts can also have custom roles with
+    more complex ID strings that are not listed here.
+    """
+    OWNER = '0'
+    ADMIN = '1'
+    MEMBER = '2'
 
 
 class ZoomError(Exception):

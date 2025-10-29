@@ -43,10 +43,10 @@ import sys
 import tempfile
 from zoomus import ZoomClient
 from zoomus.util import encode_uuid
-from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS, ZOOM_ROLES
+from lib.constants import MEDIA_TYPE_FOR_EXTENSION, VIDEO_CATEGORY_IDS
 from lib.youtube import get_youtube_client, upload_video, add_video_to_playlist, validate_youtube_credentials
 from lib.gdrive import get_gdrive_client, validate_gdrive_credentials, ensure_folder, is_trashed, upload_file
-from lib.zoom import RecordingStatus, ZoomError, download_zoom_file, parse_zoom
+from lib.zoom import RecordingStatus, ZoomError, ZoomRole, download_zoom_file, parse_zoom
 
 ZOOM_CLIENT_ID = os.environ['EDGI_ZOOM_CLIENT_ID']
 ZOOM_CLIENT_SECRET = os.environ['EDGI_ZOOM_CLIENT_SECRET']
@@ -309,7 +309,7 @@ def main():
     zoom = ZoomClient(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, ZOOM_ACCOUNT_ID)
 
     # Official meeting recordings we will upload belong to the account owner.
-    zoom_user_id = zoom.user.list(role_id=ZOOM_ROLES['owner']).json()['users'][0]['id']
+    zoom_user_id = zoom.user.list(role_id=ZoomRole.OWNER).json()['users'][0]['id']
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         print(f'Creating tmp dir: {tmpdirname}\n')
