@@ -69,4 +69,13 @@ jobs:
         run: |
           python3 scripts/upload_zoom_recordings.py \
             --from '${{ inputs.from || '5d' }}' \
-            --to '${{ inputs.to || '+1d' }}'
+            --to '${{ inputs.to || '+1d' }}' \
+            | tee output.txt
+
+          (
+            echo '# Upload Output'
+            echo ''
+            echo '```'
+            cat output.txt
+            echo '```'
+          ) >> "${GITHUB_STEP_SUMMARY}"
