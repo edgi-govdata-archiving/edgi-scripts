@@ -1,0 +1,23 @@
+[project]
+name = "edgi-scripts"
+description = "Internal tools and scripts for use at EDGI."
+version = "1.0.0"
+readme = "README.md"
+maintainers = [
+  { name="Environmental Data Governance Initiative", email="info@envirodatagov.org" },
+]
+license = "GPL-3.0-only"
+classifiers = [
+    "Private :: Do Not Upload",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "requests ~=2.32.3",
+    "zoomus ~=1.2.1",
+    "click ~=8.1.8",
+    "google-api-python-client ~=2.141.0",
+    "google-auth ~=2.34.0",
+    "google-auth-oauthlib ~=1.2.1",
+    "httplib2 ~=0.22.0",
+    "python-dateutil ~=2.9.0",
+]

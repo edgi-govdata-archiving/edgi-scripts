@@ -40,14 +40,14 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: '3.12'
-          cache: 'pip'
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        env:
+          # Suppress some annoying syntax warnings from zoomus, which seems unmaintained at this point.
+          UV_COMPILE_BYTECODE: '1'
+        run: uv sync
 
       - name: Decrypt Credential Files
         env:
@@ -67,7 +67,7 @@ jobs:
           EDGI_ZOOM_CLIENT_ID: ${{ secrets.EDGI_ZOOM_CLIENT_ID }}
           EDGI_ZOOM_CLIENT_SECRET: ${{ secrets.EDGI_ZOOM_CLIENT_SECRET }}
         run: |
-          python3 scripts/upload_zoom_recordings.py \
+          uv run scripts/upload_zoom_recordings.py \
             --from '${{ inputs.from || '5d' }}' \
             --to '${{ inputs.to || '+1d' }}' \
             | tee output.txt
