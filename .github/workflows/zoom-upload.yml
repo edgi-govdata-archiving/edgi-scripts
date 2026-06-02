@@ -44,6 +44,9 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Install Dependencies
+        env:
+          # Suppress some annoying syntax warnings from zoomus, which seems unmaintained at this point.
+          UV_COMPILE_BYTECODE: '1'
         run: uv sync
 
       - name: Decrypt Credential Files
