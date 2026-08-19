@@ -12,7 +12,7 @@ classifiers = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "requests ~=2.32.3",
+    "requests>=2.32.3,<2.35.0",
     "zoomus ~=1.2.1",
     "click ~=8.1.8",
     "google-api-python-client>=2.141,<2.199",
