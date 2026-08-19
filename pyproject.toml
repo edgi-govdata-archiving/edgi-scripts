@@ -10,7 +10,7 @@ license = "GPL-3.0-only"
 classifiers = [
     "Private :: Do Not Upload",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "requests ~=2.32.3",
     "zoomus ~=1.2.1",
