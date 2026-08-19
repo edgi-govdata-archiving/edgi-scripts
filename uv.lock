@@ -253,7 +253,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = "~=8.1.8" },
-    { name = "google-api-python-client", specifier = "~=2.141.0" },
+    { name = "google-api-python-client", specifier = ">=2.141,<2.199" },
     { name = "google-auth", specifier = "~=2.56.3" },
     { name = "google-auth-oauthlib", specifier = "~=1.4.0" },
     { name = "httplib2", specifier = "~=0.32.0" },
@@ -280,7 +280,7 @@ wheels = [
 
 [[package]]
 name = "google-api-python-client"
-version = "2.141.0"
+version = "2.198.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core" },
@@ -289,9 +289,9 @@ dependencies = [
     { name = "httplib2" },
     { name = "uritemplate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/82/8cbaf34a07d7d32c00ba466769f071d1cc749de2654595837da0c23ce23a/google_api_python_client-2.141.0.tar.gz", hash = "sha256:0f225b1f45d5a6f8c2a400f48729f5d6da9a81138e81e0478d61fdd8edf6563a", size = 11652283, upload-time = "2024-08-14T18:05:48.488Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/53/0cd38e3a29d72ce45e27feba2ce1cd8049d69af9c48cb14fb164f1be9133/google_api_python_client-2.198.0.tar.gz", hash = "sha256:dfe3e16fb241af6e9c460a33f65085b3450e05cea09364f6b5d8997fb7e43e2a", size = 15060142, upload-time = "2026-06-25T14:32:42.953Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/a7/817a0fc24cf948edf3ce1e3220f82d82eccbe3f96d50eba89392c8d673dd/google_api_python_client-2.141.0-py2.py3-none-any.whl", hash = "sha256:43c05322b91791204465291b3852718fae38d4f84b411d8be847c4f86882652a", size = 12150416, upload-time = "2024-08-14T18:05:44.884Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/92/0fc9e7a09eb240c31b879bd8d2e43f81ed1f86c4798b79ead4a083921ab3/google_api_python_client-2.198.0-py3-none-any.whl", hash = "sha256:fabac935474e817da5e662ff61bf7139439d6f92b32d332a7318a2d45931e03e", size = 15644203, upload-time = "2026-06-25T14:32:39.963Z" },
 ]
 
 [[package]]
