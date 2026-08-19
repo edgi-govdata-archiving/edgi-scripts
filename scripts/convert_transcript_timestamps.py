@@ -25,7 +25,7 @@ def process(input_file, output_file, context_offset, start_timestamp):
 
 def parse_transcript(input_file, context_offset):
     data = [{'raw': x.decode('utf8')} for x in input_file.readlines()]
-    line_re = re.compile('^(?P<timestamp>.+?)\s+(?P<author>.+?):\s+(?P<message>.+)')
+    line_re = re.compile(r'^(?P<timestamp>.+?)\s+(?P<author>.+?):\s+(?P<message>.+)')
 
     for i, line in enumerate(data):
         result = re.match(line_re, line['raw'])
