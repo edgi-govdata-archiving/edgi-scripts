@@ -19,5 +19,5 @@ dependencies = [
     "google-auth>=2.56.3,<2.63.0",
     "google-auth-oauthlib>=1.4,<1.6",
     "httplib2 ~=0.32.0",
-    "python-dateutil ~=2.9.0",
+    "python-dateutil>=2.9,<3.1",
 ]
