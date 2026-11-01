@@ -17,7 +17,7 @@ dependencies = [
     "click>=8.1.8,<8.6.0",
     "google-api-python-client>=2.141,<2.201",
     "google-auth>=2.56.3,<2.63.0",
-    "google-auth-oauthlib ~=1.4.0",
+    "google-auth-oauthlib>=1.4,<1.6",
     "httplib2 ~=0.32.0",
     "python-dateutil ~=2.9.0",
 ]
